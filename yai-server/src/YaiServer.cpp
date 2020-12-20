@@ -3,8 +3,8 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-#include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
+#include "LittleFS.h"
 
 const byte DNS_PORT = 53;
 IPAddress apLocalIp(192, 168, 50, 1);
@@ -35,32 +35,80 @@ void setup(void) {
 	Serial.println(" ###############################");
 	Serial.println(" ## YaiServer v0.0.1-SNAPSHOT ##");
 	Serial.println(" ###############################");
+
+  FSInfo fs_info;
+  if (LittleFS.begin()) {
+		Serial.println("LittleFS ready");
+	}
+  LittleFS.info(fs_info);
+  Serial.println(fs_info.totalBytes);
+  Serial.println(fs_info.usedBytes);
+  Serial.println(fs_info.maxOpenFiles);
+  Serial.println(fs_info.maxPathLength);
+  Dir dir = LittleFS.openDir("/html");
+  Serial.println("-----------InHtml-------------");
+  while (dir.next()) {
+    Serial.print(dir.fileName());
+    if(dir.fileSize()) {
+        File f = dir.openFile("r");
+        Serial.println(f.size());
+    }
+  }
+  Serial.println("----------InDir /------------");
+  Dir dir2 = LittleFS.openDir("/");
+  while (dir2.next()) {
+    Serial.print(dir2.fileName());
+    if(dir2.fileSize()) {
+        File f2 = dir2.openFile("r");
+        Serial.println(f2.size());
+    }
+  }  
+
+  Serial.println("------------------------------");
+
+  File dataFile = LittleFS.open("/html/index.html", "r");
+  
+  while(dataFile.available()){
+    Serial.write(dataFile.read());
+  }
+  Serial.println("------------------");
+
+  /*
 	Serial.println(" ######### Wifi Client ##########");
   wifiConnect();
 	Serial.println(" ######### DNS Server ###########");
   startDNSServer();
 	Serial.println(" ######### HTTP Server ##########");
   startHttpServer();
+  */
 }
 
 void loop(void) {
-  dnsServer.processNextRequest();
-	server.handleClient();
+  //dnsServer.processNextRequest();
+	//server.handleClient();
 }
 
-/*
+String processor(const String& var){
+  Serial.print("Processor: ");
+  Serial.println(var);
+  return "example value";
+}
+
 void handleRoot() {
 	String htmlSrc = "<HTML><BODY>YaisServer v.0.0.1-SNAPSHOT ["+YAI_UID+"]</BODY></HTML>";
-  Serial.println("La lesera");
+  Serial.println("Handle Root");
+  /*
+  File dataFile = SPIFFS.open("/index.html", "r");
+  
+  while(dataFile.available()){
+    Serial.write(dataFile.read());
+  }
+  */
 	server.send(200, "text/html", htmlSrc);
-}
-*/
-void handleRoot() {
-
 }
 
 void httpController() {
-  //server.on("/", handleRoot);
+  server.on("/", handleRoot);
   //server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
   //  request->send(SPIFFS, "/index.html", String(), false, processor);
   //});  
@@ -77,10 +125,11 @@ void startHttpServer() {
 	}
 	MDNS.addService("http", "tcp", 80);
     // Initialize SPIFFS
-  if(!SPIFFS.begin()){
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
+  // if(!SPIFFS.begin()){
+  //  Serial.println("An Error has occurred while mounting SPIFFS");
+  //  return;
+  //}
+
   httpController();
 }
 
