@@ -1,20 +1,29 @@
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WebServer.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <ESP8266mDNS.h>
+#include <WiFiClient.h>
+#include <Arduino.h>
 #include <DNSServer.h>
-#include "LittleFS.h"
+#include <LittleFS.h>
+#include <PubSubClient.h>
+
 
 const byte DNS_PORT = 53;
 IPAddress apLocalIp(192, 168, 50, 1);
 IPAddress apSubnetMask(255, 255, 255, 0);
 DNSServer dnsServer;
 boolean connectedWifi = false;
+char message_buff[100];
 const int totalWifi = 3;
 const int retryWifi = 17;
 const String YAI_UID = "YSRV_001";
 #define apSsid "YaiDNSServer"
+
+//const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_server = "192.168.1.40";
+const char* mqtt_user = "test";
+const char* mqtt_password = "test";
 
 char* arrayWifi[totalWifi][2] = {
 		{ "Cachantun*", "2119amto" },
@@ -26,7 +35,11 @@ void startDNSServer();
 void startHttpServer();
 void httpController();
 void handleNotFound();
-ESP8266WebServer server(80);
+void callback(char* topic, byte* payload, unsigned int length);
+
+AsyncWebServer server(80);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 void setup(void) {
 	Serial.begin(9600);
@@ -35,6 +48,7 @@ void setup(void) {
 	Serial.println(" ###############################");
 	Serial.println(" ## YaiServer v0.0.1-SNAPSHOT ##");
 	Serial.println(" ###############################");
+
 
   FSInfo fs_info;
   if (LittleFS.begin()) {
@@ -73,64 +87,100 @@ void setup(void) {
   }
   Serial.println("------------------");
 
-  /*
+  
 	Serial.println(" ######### Wifi Client ##########");
   wifiConnect();
 	Serial.println(" ######### DNS Server ###########");
   startDNSServer();
 	Serial.println(" ######### HTTP Server ##########");
   startHttpServer();
-  */
+
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+/*
+
+  if (client.connect("ESP8266Client")) {
+    Serial.println("connected");
+    //out
+    client.publish("outYaiTopic", "init");
+    //in
+    client.subscribe("inYaiTopic");
+    client.publish("outYaiTopic", "init22");
+  } else {
+    Serial.println("Y_:Y");
+  }
+*/
+}
+
+void reconnect() {
+      // clientID, username, MD5 encoded password
+      client.connect("ESP8266Client");
+      client.publish("outYaiTopic", "I'm alive! ESP3266");
+      client.subscribe("inYaiTopic");
 }
 
 void loop(void) {
-  //dnsServer.processNextRequest();
-	//server.handleClient();
+  if (!client.connected()) {
+    Serial.print("Connecting to MQTT " + String(mqtt_server));
+    client.connect("ESP8266Client");
+    client.publish("outYaiTopic", "I'm alive! ESP3266");
+    client.subscribe("inYaiTopic");
+  }
+  dnsServer.processNextRequest();
+  client.loop();
+}
+
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  /*
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+*/
+  int i = 0;
+
+  //Serial.println("Message arrived:  topic: " + String(topic));
+  //Serial.println("Length: " + String(length,DEC));
+  
+  // create character buffer with ending null terminator (string)
+  for(i=0; i<length; i++) {
+    message_buff[i] = payload[i];
+  }
+  message_buff[i] = '\0';
+  
+  String msgString = String(message_buff);
+  
+  Serial.println("Payload: " + msgString);
+
 }
 
 String processor(const String& var){
   Serial.print("Processor: ");
   Serial.println(var);
-  return "example value";
-}
-
-void handleRoot() {
-	String htmlSrc = "<HTML><BODY>YaisServer v.0.0.1-SNAPSHOT ["+YAI_UID+"]</BODY></HTML>";
-  Serial.println("Handle Root");
-  /*
-  File dataFile = SPIFFS.open("/index.html", "r");
-  
-  while(dataFile.available()){
-    Serial.write(dataFile.read());
-  }
-  */
-	server.send(200, "text/html", htmlSrc);
+  if (var == "YAI_IP")
+    return "YAI_IP Value";
+  if (var == "YAI_UID")
+    return "YAI_UID Value";
 }
 
 void httpController() {
-  server.on("/", handleRoot);
-  //server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-  //  request->send(SPIFFS, "/index.html", String(), false, processor);
-  //});  
-  Serial.println("... [GET] /");
-	server.onNotFound(handleNotFound);
 
-	server.begin();
-	Serial.println("HTTP server started");  
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/html/index.html", String(), false, processor);
+  });
+
 }
 
 void startHttpServer() {
-  if (MDNS.begin("esp8266")) {
-		Serial.println("MDNS responder started");
-	}
-	MDNS.addService("http", "tcp", 80);
-    // Initialize SPIFFS
-  // if(!SPIFFS.begin()){
-  //  Serial.println("An Error has occurred while mounting SPIFFS");
-  //  return;
-  //}
 
   httpController();
+
+	server.begin();
+	Serial.println("HTTP server started");    
 }
 
 void startDNSServer() {
@@ -141,6 +191,10 @@ void startDNSServer() {
 	dnsServer.start(DNS_PORT, "yairover.ddns.com", apLocalIp);
 	Serial.println("DNS Server OK ip:" + apLocalIp.toString() );
 	Serial.println("ssid:" + String(apSsid));  
+  if (MDNS.begin("esp8266")) {
+		Serial.println("MDNS responder started");
+	}
+	MDNS.addService("http", "tcp", 80);    
 }
 
 void wifiConnect() {
@@ -175,22 +229,4 @@ void wifiConnect() {
 	Serial.print("MAC address: ");
 	Serial.println(WiFi.macAddress());
   
-}
-
-void handleNotFound() {
-	String content_type = "text/plain";
-	String message = "File Not Found\n\n";
-	int codeStatus = 404;
-	message += "URI: ";
-	message += server.uri();
-	message += "\nMethod: ";
-	message += (server.method() == HTTP_GET) ? "GET" : "POST";
-	message += "\nArguments: ";
-	message += server.args();
-	message += "\n";
-	for (uint8_t i = 0; i < server.args(); i++) {
-		message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-	}
-
-	server.send(codeStatus, content_type, message);
 }
