@@ -14,7 +14,6 @@ const char* mqtt_server = "broker.hivemq.com";
 const char* mqtt_user = "test";
 const char* mqtt_password = "test";
 
-void startHttpServer();
 void httpController();
 void handleNotFound();
 void callback(char* topic, byte* payload, unsigned int length);
@@ -54,41 +53,13 @@ void setup(void) {
   Serial.println(fs_info.usedBytes);
   Serial.println(fs_info.maxOpenFiles);
   Serial.println(fs_info.maxPathLength);
-  Dir dir = LittleFS.openDir("/html");
-  Serial.println("-----------InHtml-------------");
-  while (dir.next()) {
-    Serial.print(dir.fileName());
-    if(dir.fileSize()) {
-        File f = dir.openFile("r");
-        Serial.println(f.size());
-    }
-  }
-  Serial.println("----------InDir /------------");
-  Dir dir2 = LittleFS.openDir("/");
-  while (dir2.next()) {
-    Serial.print(dir2.fileName());
-    if(dir2.fileSize()) {
-        File f2 = dir2.openFile("r");
-        Serial.println(f2.size());
-    }
-  }  
-
-  Serial.println("------------------------------");
-
-  File dataFile = LittleFS.open("/html/index.html", "r");
-  
-  while(dataFile.available()){
-    Serial.write(dataFile.read());
-  }
-  Serial.println("------------------");
-
   
 	Serial.println(" ######### Wifi Client ##########");
   yaiWifi.connect();
 	Serial.println(" ######### DNS Server ###########");
   yaiWifi.startDNSServer("YAI_SRV_" + YAI_UID);
 	Serial.println(" ######### HTTP Server ##########");
-  startHttpServer();
+  yaiHttpSrv.start();
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
@@ -130,8 +101,32 @@ String processor(const String& var){
     return "YAI_UID Value";
 }
 
-void startHttpServer() {
+void test(){
+  Dir dir = LittleFS.openDir("/html");
+  Serial.println("-----------InHtml-------------");
+  while (dir.next()) {
+    Serial.print(dir.fileName());
+    if(dir.fileSize()) {
+        File f = dir.openFile("r");
+        Serial.println(f.size());
+    }
+  }
+  Serial.println("----------InDir /------------");
+  Dir dir2 = LittleFS.openDir("/");
+  while (dir2.next()) {
+    Serial.print(dir2.fileName());
+    if(dir2.fileSize()) {
+        File f2 = dir2.openFile("r");
+        Serial.println(f2.size());
+    }
+  }  
 
-  yaiHttpSrv.start();
+  Serial.println("------------------------------");
+
+  File dataFile = LittleFS.open("/html/index.html", "r");
+  
+  while(dataFile.available()){
+    Serial.write(dataFile.read());
+  }
+  Serial.println("------------------------------");
 }
-
