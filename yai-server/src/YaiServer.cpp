@@ -1,10 +1,9 @@
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+
 #include <Arduino.h>
 #include <LittleFS.h>
 #include <PubSubClient.h>
 #include "YaiWIFI.h"
+#include "YaiHttpSrv.h"
 
 char message_buff[100];
 
@@ -20,11 +19,23 @@ void httpController();
 void handleNotFound();
 void callback(char* topic, byte* payload, unsigned int length);
 
-AsyncWebServer server(80);
+//AsyncWebServer server(80);
 
 // WiFiClient espClient;
 YaiWIFI yaiWifi;
 PubSubClient client(yaiWifi.espClient);
+
+
+class CustomHttpController : public YaiHttpSrv {
+  public:
+    void httpController() override {
+      getServer()->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(200, "text/plain", "YaiHttpSrv Ready, must implement22 YaiHttpSrv::httpController");
+      });
+    }
+};
+
+CustomHttpController yaiHttpSrv;
 
 void setup(void) {
 	Serial.begin(9600);	
@@ -119,17 +130,8 @@ String processor(const String& var){
     return "YAI_UID Value";
 }
 
-void httpController() {
-
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/html/index.html", String(), false, processor);
-  });
-
-}
-
 void startHttpServer() {
-  httpController();
-	server.begin();
-	Serial.println("HTTP server started");    
+
+  yaiHttpSrv.start();
 }
 

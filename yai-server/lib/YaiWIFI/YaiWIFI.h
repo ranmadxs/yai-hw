@@ -29,9 +29,9 @@ class YaiWIFI {
     String apSsid;    
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
+      { "YAI HUAWEI Y9 2019", "1101000000" },
       { "Cachantun*", "2119amto" },
-      { "VTR-YAI-5Ghz", "Pana8bc1108" },
-      { "GalaxyJ1", "1101000000" } };
+      { "VTR-YAI-5Ghz", "Pana8bc1108" } };
 };
 
 #endif
