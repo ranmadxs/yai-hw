@@ -10,24 +10,37 @@ class YaiPubSub {
    
     YaiPubSub(WiFiClient wifiClient, YAI_CALLBACK) {
       pubSubClient = new PubSubClient(wifiClient);
+      callback = YAI_CALLBACK;
     }
 
     PubSubClient* pubSubClient;
 
-    YaiPubSub& setCallback(MQTT_CALLBACK_SIGNATURE) {
-      this->callback = callback;
-      return *this;
-    }
-
     void start() {
       pubSubClient->setServer(mqtt_server, mqtt_port);
-      pubSubClient->setCallback(this->callback);      
+      pubSubClient->setCallback(callback);
     }
 
     void reconnect() {
-      if (!client.connected()) {
-        client.connect("ESP8266Client");    
-        client.subscribe("inYaiTopic");
+      // Loop until we're reconnected
+      while (!pubSubClient->connected()) {
+        Serial.print("Attempting MQTT connection...");
+        // Create a random client ID
+        String clientId = "ESP8266Client-";
+        clientId += String(random(0xffff), HEX);
+        // Attempt to connect
+        if (pubSubClient->connect(clientId.c_str())) {
+          Serial.println("connected");
+          // Once connected, publish an announcement...
+          pubSubClient->publish("outTopic", "hello world");
+          // ... and resubscribe
+          pubSubClient->subscribe("inYaiTopic");
+        } else {
+          pubSubClient->print("failed, rc=");
+          pubSubClient->print(pubSubClient->state());
+          pubSubClient->println(" try again in 5 seconds");
+          // Wait 5 seconds before retrying
+          delay(5000);
+        }
       }
     }
 

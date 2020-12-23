@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #include <PubSubClient.h>
 #include "YaiWIFI.h"
+//#include "YaiPubSub.h"
 #include "YaiWaterPumpController.h"
 
 char message_buff[100];
@@ -17,9 +18,6 @@ const char* mqtt_password = "test";
 const bool ENABLE_WIFI = true;
 const bool ENABLE_HTTP_SRV = true;
 
-
-void httpController();
-void handleNotFound();
 void testLittleFS();
 void reconnect();
 void callback(char* topic, byte* payload, unsigned int length);
@@ -29,11 +27,8 @@ void callback(char* topic, byte* payload, unsigned int length);
 // WiFiClient espClient;
 YaiWIFI yaiWifi;
 PubSubClient client(yaiWifi.espClient);
-unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
-int value = 0;
-
 
 YaiWaterPumpController yaiHttpSrv;
 
@@ -75,21 +70,6 @@ void loop(void) {
     reconnect();
   }
   client.loop();
-
-/*
-  unsigned long now = millis();
-  if (now - lastMsg > 2000) {
-    lastMsg = now;
-    ++value;
-    snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish("inYaiTopic", msg);
-  }
-  if (ENABLE_WIFI) {
-    yaiWifi.dnsServer.processNextRequest();
-  }  
-  */
 }
 
 void reconnect() {
@@ -128,15 +108,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 }
 
-String processor(const String& var){
-  Serial.print("Processor: ");
-  Serial.println(var);
-  if (var == "YAI_IP")
-    return "YAI_IP Value";
-  if (var == "YAI_UID")
-    return "YAI_UID Value";
-}
-
 void testLittleFS(){
 
   Serial.println("----------InDir /------------");
@@ -162,7 +133,7 @@ void testLittleFS(){
   }
 
 
-  Serial.println("----------[index.html]-------------");
+  Serial.println("----------[/html/index.html]-------------");
 
   File dataFile = LittleFS.open("/html/index.html", "r");
   
