@@ -3,7 +3,7 @@
 #include <LittleFS.h>
 #include <PubSubClient.h>
 #include "YaiWIFI.h"
-#include "YaiHttpSrv.h"
+#include "YaiWaterPumpController.h"
 
 char message_buff[100];
 
@@ -14,8 +14,14 @@ const char* mqtt_server = "broker.hivemq.com";
 const char* mqtt_user = "test";
 const char* mqtt_password = "test";
 
+const bool ENABLE_WIFI = true;
+const bool ENABLE_HTTP_SRV = true;
+
+
 void httpController();
 void handleNotFound();
+void testLittleFS();
+void reconnect();
 void callback(char* topic, byte* payload, unsigned int length);
 
 //AsyncWebServer server(80);
@@ -24,17 +30,7 @@ void callback(char* topic, byte* payload, unsigned int length);
 YaiWIFI yaiWifi;
 PubSubClient client(yaiWifi.espClient);
 
-
-class CustomHttpController : public YaiHttpSrv {
-  public:
-    void httpController() override {
-      getServer()->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/plain", "YaiHttpSrv Ready, must implement22 YaiHttpSrv::httpController");
-      });
-    }
-};
-
-CustomHttpController yaiHttpSrv;
+YaiWaterPumpController yaiHttpSrv;
 
 void setup(void) {
 	Serial.begin(9600);	
@@ -43,26 +39,38 @@ void setup(void) {
 	Serial.println(" ## YaiServer v0.0.1-SNAPSHOT ##");
 	Serial.println(" ###############################");
 
-
   FSInfo fs_info;
   if (LittleFS.begin()) {
 		Serial.println("LittleFS ready");
 	}
   LittleFS.info(fs_info);
-  Serial.println(fs_info.totalBytes);
-  Serial.println(fs_info.usedBytes);
-  Serial.println(fs_info.maxOpenFiles);
-  Serial.println(fs_info.maxPathLength);
+
+  testLittleFS();
   
-	Serial.println(" ######### Wifi Client ##########");
-  yaiWifi.connect();
-	Serial.println(" ######### DNS Server ###########");
-  yaiWifi.startDNSServer("YAI_SRV_" + YAI_UID);
-	Serial.println(" ######### HTTP Server ##########");
-  yaiHttpSrv.start();
+  if (ENABLE_WIFI) { 
+    Serial.println(" ######### Wifi Client ##########");
+    yaiWifi.connect();
+  }
+  if (ENABLE_WIFI) { 
+    Serial.println(" ######### DNS Server ###########");
+    yaiWifi.startDNSServer("YAI_SRV_" + YAI_UID);
+  }
+	
+  if (ENABLE_HTTP_SRV) { 
+    Serial.println(" ######### HTTP Server ##########");
+    yaiHttpSrv.start();
+  }
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+}
+
+void loop(void) {
+  reconnect();
+  client.loop();
+  if (ENABLE_WIFI) {
+    yaiWifi.dnsServer.processNextRequest();
+  }  
 }
 
 void reconnect() {
@@ -71,13 +79,6 @@ void reconnect() {
     client.subscribe("inYaiTopic");
   }
 }
-
-void loop(void) {
-  reconnect();
-  yaiWifi.dnsServer.processNextRequest();
-  client.loop();
-}
-
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -101,9 +102,22 @@ String processor(const String& var){
     return "YAI_UID Value";
 }
 
-void test(){
+void testLittleFS(){
+
+  Serial.println("----------InDir /------------");
+  Dir dir2 = LittleFS.openDir("/");
+  while (dir2.next()) {
+    Serial.print(dir2.fileName());
+    if(dir2.fileSize()) {
+        File f2 = dir2.openFile("r");
+        Serial.println("  " + String(f2.size()) + "   " + f2.getCreationTime());
+    } else {
+      Serial.println("  <Dir>");
+    }
+  }  
+
   Dir dir = LittleFS.openDir("/html");
-  Serial.println("-----------InHtml-------------");
+  Serial.println("-----------/html-------------");
   while (dir.next()) {
     Serial.print(dir.fileName());
     if(dir.fileSize()) {
@@ -111,17 +125,9 @@ void test(){
         Serial.println(f.size());
     }
   }
-  Serial.println("----------InDir /------------");
-  Dir dir2 = LittleFS.openDir("/");
-  while (dir2.next()) {
-    Serial.print(dir2.fileName());
-    if(dir2.fileSize()) {
-        File f2 = dir2.openFile("r");
-        Serial.println(f2.size());
-    }
-  }  
 
-  Serial.println("------------------------------");
+
+  Serial.println("----------[index.html]-------------");
 
   File dataFile = LittleFS.open("/html/index.html", "r");
   
