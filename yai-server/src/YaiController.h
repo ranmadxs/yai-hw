@@ -4,15 +4,13 @@
 #include "YaiHttpSrv.h"
 #include <LittleFS.h>
 
-YaiContext yaiContext;
-
 String processor(const String& var){
   Serial.print("Processor: ");
   Serial.println(var);
   if (var == "YAI_IP")
     return "YAI_IP Value";
   if (var == "YAI_UID")
-    return yaiContext.YAI_UID;
+    return YAI_UID;
 }
 
 class YaiController : public YaiHttpSrv {
