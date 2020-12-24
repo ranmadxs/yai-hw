@@ -4,7 +4,7 @@
 #include <PubSubClient.h>
 #include "YaiWIFI.h"
 //#include "YaiPubSub.h"
-#include "YaiWaterPumpController.h"
+#include "YaiController.h"
 
 char message_buff[100];
 
@@ -30,7 +30,7 @@ PubSubClient client(yaiWifi.espClient);
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
 
-YaiWaterPumpController yaiHttpSrv;
+YaiController yaiHttpSrv;
 
 void setup(void) {
 	Serial.begin(115200);	
