@@ -27,5 +27,5 @@ void YaiHttpSrv::start(){
   httpController();
   httpYaiServer->onNotFound(onRequestNotFound);
 	httpYaiServer->begin();
-	Serial.println("HTTP server started");   
+	Serial.println("HTTP server started");
 }
