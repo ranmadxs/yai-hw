@@ -7,7 +7,7 @@
 #include <Arduino.h>
 
 const int totalWifi = 3;
-const int retryWifi = 17;
+const int retryWifi = 25;
 
 class YaiWIFI {
   public:
@@ -24,12 +24,15 @@ class YaiWIFI {
     WiFiClient espClient;
     DNSServer dnsServer;
 
+    String getIp();
+
   private:
+    String yaiIP;
     const byte DNS_PORT = 53;
     String apSsid;    
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
-      { "YAI HUAWEI Y9 2019", "1101000000" },
+      { "YAI_HUAWEI_Y9_2019", "1101000000" },
       { "Cachantun*", "2119amto" },
       { "VTR-YAI-5Ghz", "Pana8bc1108" } };
 };

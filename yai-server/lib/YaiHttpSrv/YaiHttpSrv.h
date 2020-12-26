@@ -6,6 +6,8 @@
 
 //https://github.com/me-no-dev/ESPAsyncWebServer#respond-with-content-coming-from-a-stream
 
+//https://platformio.org/lib/show/303/ESP8266RestClient/examples
+
 class YaiHttpSrv {
   public:
          
