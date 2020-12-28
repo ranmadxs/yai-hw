@@ -4,7 +4,7 @@ void serialAppender(String msg) {
   Serial.println( msg );
 }
 
-void YaiLog::addAppender(Lolaso lolaso) {  
+void YaiLog::addAppender(LogAppender lolaso) {  
   callbacks[totalAppender] = lolaso;
   totalAppender++;
 /*
@@ -19,7 +19,7 @@ void YaiLog::addAppender(Lolaso lolaso) {
 YaiLog::YaiLog(String yr_name){
   yrname = yr_name;
   totalAppender = 0;
-  addAppender(Lolaso(serialAppender));
+  addAppender(LogAppender(serialAppender));
 }
 
 void YaiLog::baseLog(String str) {

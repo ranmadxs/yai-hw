@@ -20,15 +20,13 @@
 
 const int TOTAL_LOG_CALBACKS = 10;
 
-class Lolaso {
+class LogAppender {
   public:
-    ~Lolaso(){}
-    Lolaso(void (*f)(String) = 0)
+    ~LogAppender(){}
+    LogAppender(void (*f)(String) = 0)
         : function(f) {}
     void (*function)(String);
 };
-
-typedef Vector<Lolaso> Elements;
 
 class YaiLog {
   public:
@@ -38,12 +36,12 @@ class YaiLog {
     void error(String str);
     void debug(String str);
     void warn(String str);
-    void addAppender(Lolaso lolaso);
+    void addAppender(LogAppender lolaso);
 
   protected:
 	  String yrname;
     //LinkedList<Lolaso> callbacks;
-    Lolaso callbacks[TOTAL_LOG_CALBACKS];
+    LogAppender callbacks[TOTAL_LOG_CALBACKS];
     int totalAppender;
     //Elements vector;
 

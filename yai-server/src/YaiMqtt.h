@@ -5,14 +5,10 @@
 #include "YaiContext.h"
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  String msgPayload;
-  //for (int i = 0; i < length; i++) {
-  //  msgPayload = (char)payload[i];
-  //}
-  strcpy(msgPayload, (char *)payload);
+  String msgPayload = "";
+  for (int i = 0; i < length; i++) {
+    msgPayload = msgPayload + (char)payload[i];
+  }
   logger.debug("Message arrived [" + String(topic) + "] " + msgPayload);
   //Serial.println();
 }
