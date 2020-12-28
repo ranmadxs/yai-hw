@@ -10,7 +10,7 @@ String processor(const String& var){
   if (var == "YAI_IP")
     return "YAI_IP Value";
   if (var == "YAI_UID")
-    return YAI_UID;
+    return YAI_UID_NAME;
 }
 
 
@@ -40,6 +40,7 @@ class YaiController : public YaiHttpSrv {
 						jsonCommand += ",";
 					}
 				}
+        logger.debug(jsonCommand);
 				message += " << " + jsonCommand;
 				message += "\n";
         AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", message);

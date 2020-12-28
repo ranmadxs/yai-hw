@@ -27,7 +27,7 @@ void setup(void) {
 	}
   LittleFS.info(fs_info);
 
-  testLittleFS();
+  //testLittleFS();
   
   if (ENABLE_WIFI) { 
     Serial.println(" ######### Wifi Client ##########");
@@ -35,7 +35,9 @@ void setup(void) {
   }
   if (ENABLE_WIFI) { 
     Serial.println(" ######### DNS Server ###########");
-    yaiWifi.startDNSServer("YAI_SRV_" + YAI_UID);
+    String dnsName = "YAI_SRV_" + String(YAI_UID_NAME);
+    logger.debug(dnsName);
+    yaiWifi.startDNSServer(dnsName);
   }
 	
   if (ENABLE_HTTP_SRV) { 
@@ -43,13 +45,18 @@ void setup(void) {
     yaiHttpSrv.start();
   }
 
-  clientMqtt.setServer(mqtt_server, 1883);
-  clientMqtt.setCallback(callback);
+  if (ENABLE_MQTT) { 
+    clientMqtt.setServer(mqtt_server, 1883);
+    clientMqtt.setCallback(callback);
+  }
+  logger.info("Ready");
 }
 
 void loop(void) {
-  if (!clientMqtt.connected()) {
-    reconnect();
+  if (ENABLE_MQTT) { 
+    if (!clientMqtt.connected()) {
+      reconnect();
+    }
+    clientMqtt.loop();
   }
-  clientMqtt.loop();
 }

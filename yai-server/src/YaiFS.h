@@ -2,6 +2,7 @@
 #define YaiFS_h
 #include <Arduino.h>
 #include <LittleFS.h>
+#include "YaiContext.h"
 
 void testLittleFS(){
 
