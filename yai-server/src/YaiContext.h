@@ -8,6 +8,8 @@
 
 const char* YAI_UID_NAME = "WP01";
 
+const int WEBSOCKET_PORT = 81;
+
 char message_buff[100];
 YaiLog logger(YAI_UID_NAME);
 //const String YAI_UID = "WP01";
@@ -20,7 +22,7 @@ const char* mqtt_password = "test";
 const bool ENABLE_WIFI = true;
 const bool ENABLE_HTTP_SRV = true;
 const bool ENABLE_MQTT = true && ENABLE_WIFI;
-
+const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
 //AsyncWebServer server(80);
 
 // WiFiClient espClient;

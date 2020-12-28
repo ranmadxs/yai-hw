@@ -7,6 +7,7 @@
 #include "YaiController.h"
 #include "YaiMqtt.h"
 #include "YaiFS.h"
+#include "YaiWebSocket.hpp"
 
 void testLittleFS();
 void reconnect();
@@ -49,6 +50,12 @@ void setup(void) {
     clientMqtt.setServer(mqtt_server, 1883);
     clientMqtt.setCallback(callback);
   }
+
+if (ENABLE_WEBSOCKETS) { 
+  Serial.println(" ######### WEBSOCKET ##########");
+  InitWebSockets();
+}
+
   logger.info("Ready");
 }
 
@@ -58,5 +65,8 @@ void loop(void) {
       reconnect();
     }
     clientMqtt.loop();
+  }
+  if (ENABLE_WEBSOCKETS) { 
+    webSocket.loop();
   }
 }
