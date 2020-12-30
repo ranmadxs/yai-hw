@@ -31,4 +31,5 @@ PubSubClient clientMqtt(yaiWifi.espClient);
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
 
+
 #endif

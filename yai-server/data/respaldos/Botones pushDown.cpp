@@ -29,7 +29,7 @@ int TRX = 1; // TXD0
 void setup(void) {
 	Serial.begin(115200);
   Serial.println("Serail Rdy");
-  pinMode(PD4, INPUT);	
+  pinMode(PD4, INPUT);
 }
 
 void loop(void) {

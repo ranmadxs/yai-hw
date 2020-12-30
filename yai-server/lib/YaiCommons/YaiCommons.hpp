@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
-#include <Vector.h>
 
 #define YAI_LOG_FOLDER						"/logs"
 
@@ -82,6 +81,22 @@ public:
 	  char *strSplit(char *str, const char *delim, char **save);
 	  void getElementRoot(String myString, String rootElement[]);
 };
+
+/************** NODEMCU PINTOUT *********************/
+bool buttonState = false;
+int pastState = 0;
+int buttonRead=0;
+int PD0 = 16;
+int PD1 = 5;  // SCL (I2C)
+int PD2 = 4;  // SDA (I2C)
+int PD3 = 0;
+int PD4 = 2;  // TXD1
+int PD5 = 14; // SCLK
+int PD6 = 12; // MISO -> RDX2
+int PD7 = 13; // MOSI -> TXD2
+int PD8 = 15; // CS
+int PRX = 3;  // RXD0
+int TRX = 1;  // TXD0
 
 #endif
 

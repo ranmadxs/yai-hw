@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 #include <LittleFS.h>
 #include <PubSubClient.h>
@@ -7,13 +6,16 @@
 #include "YaiController.h"
 #include "YaiMqtt.h"
 #include "YaiFS.h"
-#include "YaiWebSocket.hpp"
+#include "YaiActions.hpp"
+#include "YaiCustomAction.hpp"
+//#include "YaiWebSocket.hpp"
 
 void testLittleFS();
 void reconnect();
 void callback(char* topic, byte* payload, unsigned int length);
 
 YaiController yaiHttpSrv;
+YaiBtnPushDown yaiButtonPushDown(PD4);
 
 void setup(void) {
 	Serial.begin(115200);	
@@ -51,11 +53,12 @@ void setup(void) {
     clientMqtt.setCallback(callback);
   }
 
-if (ENABLE_WEBSOCKETS) { 
-  Serial.println(" ######### WEBSOCKET ##########");
-  InitWebSockets();
-}
-
+  if (ENABLE_WEBSOCKETS) { 
+    Serial.println(" ######### WEBSOCKET ##########");
+    //InitWebSockets();
+  }
+  yaiButtonPushDown.addCallback(buttonCallback);
+  yaiButtonPushDown.setup();
   logger.info("Ready");
 }
 
@@ -67,6 +70,7 @@ void loop(void) {
     clientMqtt.loop();
   }
   if (ENABLE_WEBSOCKETS) { 
-    webSocket.loop();
+    //webSocket.loop();
   }
+  yaiButtonPushDown.loop();
 }
