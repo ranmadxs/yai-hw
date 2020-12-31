@@ -6,7 +6,7 @@
 #include <DNSServer.h>
 #include <Arduino.h>
 
-const int totalWifi = 3;
+const int totalWifi = 4;
 const int retryWifi = 25;
 
 class YaiWIFI {
@@ -33,6 +33,7 @@ class YaiWIFI {
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
       { "YAI_HUAWEI_Y9_2019", "1101000000" },
+      { "Cachantun*_Ext", "2119amto" },
       { "Cachantun*", "2119amto" },
       { "VTR-YAI-5Ghz", "Pana8bc1108" } };
 };
