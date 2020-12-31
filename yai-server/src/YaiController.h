@@ -5,8 +5,6 @@
 #include <LittleFS.h>
 
 String processor(const String& var){
-  Serial.print("Processor: ");
-  Serial.println(var);
   if (var == "YAI_IP")
     return "YAI_IP Value";
   if (var == "YAI_UID")
@@ -30,7 +28,23 @@ class YaiController : public YaiHttpSrv {
       getServer()->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(LittleFS, "/html/index.html", String(), false, processor);
       });
-	    
+      /*
+      getServer()->on("/js/websocketClient.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/js/websocketClient.js", String(), false, processor);
+      });
+
+      getServer()->on("/js/jquery.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/js/jquery.js", String(), false, processor);
+      });
+      */
+
+      getServer()->serveStatic("/css", LittleFS, "/css");
+      getServer()->serveStatic("/js", LittleFS, "/js");
+      /*
+      getServer()->on("/css/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/css/style.css", String(), false, processor);
+      });
+      */
       getServer()->on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request){
 				String message = "";
 				String jsonCommand = "";
