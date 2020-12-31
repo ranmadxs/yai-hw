@@ -6,10 +6,37 @@
 
 void callback(char* topic, byte* payload, unsigned int length) {
   String msgPayload = "";
+  bool existCmd = false;
   for (int i = 0; i < length; i++) {
     msgPayload = msgPayload + (char)payload[i];
   }
+  msgPayload.toUpperCase();
   logger.debug("Message arrived [" + String(topic) + "] " + msgPayload);
+
+  if(msgPayload.length() > 10 && msgPayload.indexOf("\"CODE\":\"CMD\"") > 0) {
+    logger.debug("WIIIIIIIIIII CMD");
+    YaiCommand yaiCommand;
+    yaiCommand.type = "MQTT";
+    yaiCommand.execute = EXECUTE_CMD;
+    if(msgPayload.indexOf("ENCENDER BOMBA") > 0 || msgPayload.indexOf("INICIAR BOMBA") > 0) {
+      //logger.debug("ON BOMBA");
+      yaiCommand.command = "ON";
+      existCmd = true;
+    }
+    if(msgPayload.indexOf("APAGAR BOMBA") > 0 || msgPayload.indexOf("DETENER BOMBA") > 0) {
+      //logger.debug("OFF BOMBA");
+      yaiCommand.command = "OFF";
+      existCmd = true;
+    }
+    if (existCmd) {
+      //logger.info(yaiCommand.toString());
+      commandFactoryExecute(yaiCommand);
+    } else {
+      logger.error("Command not found");
+    }
+  } else {
+    logger.error("MALFORMED JSON COMMAND");
+  }
   //Serial.println();
 }
 

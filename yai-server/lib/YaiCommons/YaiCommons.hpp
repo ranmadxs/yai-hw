@@ -83,20 +83,17 @@ public:
 };
 
 /************** NODEMCU PINTOUT *********************/
-bool buttonState = false;
-int pastState = 0;
-int buttonRead=0;
-int PD0 = 16;
-int PD1 = 5;  // SCL (I2C)
-int PD2 = 4;  // SDA (I2C)
-int PD3 = 0;
-int PD4 = 2;  // TXD1
-int PD5 = 14; // SCLK
-int PD6 = 12; // MISO -> RDX2
-int PD7 = 13; // MOSI -> TXD2
-int PD8 = 15; // CS
-int PRX = 3;  // RXD0
-int TRX = 1;  // TXD0
 
+/*
+int ESP_D0 = 16;
+int ESP_D1 = 5;  // SCL (I2C)
+int ESP_D2 = 4;  // SDA (I2C)
+int ESP_D3 = 0;
+int ESP_D4 = 2;  // TXD1
+int ESP_D5 = 14; // SCLK
+int ESP_D6 = 12; // MISO -> RDX2
+int ESP_D7 = 13; // MOSI -> TXD2
+int ESP_D8 = 15; // CS
+*/
 #endif
 

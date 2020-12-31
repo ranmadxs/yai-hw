@@ -2,6 +2,7 @@
 
 //https://stackoverflow.com/questions/32135912/message-log-css-scroll-to-bottom
 
+/*
 bool buttonState = false;
 int pastState = 0;
 int buttonRead=0;
@@ -14,7 +15,7 @@ int PD5 = 14; // SCLK
 int PD6 = 12; // MISO -> RDX2
 int PD7 = 13; // MOSI -> TXD2
 int PD8 = 15; // CS
-int PRX = 3; // RXD0
+int PRX = 3; // RXD0TRX
 int TRX = 1; // TXD0
 
 
@@ -49,3 +50,4 @@ void loop(void) {
 
 
 }
+*/

@@ -8,8 +8,17 @@
 
 const char* YAI_UID_NAME = "WP01";
 
+int ESP_D4 = 2;
+int ESP_D6 = 12;
+
+#define RelayPin  ESP_D6
+#define RelayOn   HIGH
+#define RelayOff  LOW      
+bool buttonState = false;
+
 const int WEBSOCKET_PORT = 81;
 
+#define EXECUTE_CMD     true
 char message_buff[100];
 YaiLog logger(YAI_UID_NAME);
 //const String YAI_UID = "WP01";
@@ -31,5 +40,36 @@ PubSubClient clientMqtt(yaiWifi.espClient);
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
 
+
+void commandFactoryExecute(YaiCommand yaiCommand) {
+	YaiCommand yaiResCmd;
+  bool existCMD = false;
+	if(yaiCommand.print){
+		logger.debug("<<" + yaiCommand.toString());
+  }
+	if (yaiCommand.execute) {
+    existCMD = false;
+    if (yaiCommand.command == "ON") {
+      logger.debug("POWER ON");
+      existCMD = true;
+      buttonState = true;
+      digitalWrite(RelayPin, RelayOn);
+    }
+    if (yaiCommand.command == "OFF") {
+      existCMD = true;
+      buttonState = false;
+      logger.debug("POWER OFF");
+      digitalWrite(RelayPin, RelayOff);
+    }      
+    if (!existCMD) {
+      yaiCommand.error = yaiCommand.command + " command not found";
+    }		
+	} else {
+   logger.warn("Not execute command " + yaiCommand.command);
+  } 
+  if( yaiCommand.error.length() > 1 ) {
+    logger.error(yaiCommand.error);
+  }
+}
 
 #endif

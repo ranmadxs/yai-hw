@@ -8,14 +8,14 @@
 #include "YaiFS.h"
 #include "YaiActions.hpp"
 #include "YaiCustomAction.hpp"
-//#include "YaiWebSocket.hpp"
+#include "YaiWebSocket.hpp"
 
 void testLittleFS();
 void reconnect();
 void callback(char* topic, byte* payload, unsigned int length);
 
 YaiController yaiHttpSrv;
-YaiBtnPushDown yaiButtonPushDown(PD4);
+YaiBtnPushDown yaiButtonPushDown(ESP_D4);
 
 void setup(void) {
 	Serial.begin(115200);	
@@ -30,7 +30,7 @@ void setup(void) {
 	}
   LittleFS.info(fs_info);
 
-  //testLittleFS();
+  testLittleFS();
   
   if (ENABLE_WIFI) { 
     Serial.println(" ######### Wifi Client ##########");
@@ -55,10 +55,16 @@ void setup(void) {
 
   if (ENABLE_WEBSOCKETS) { 
     Serial.println(" ######### WEBSOCKET ##########");
-    //InitWebSockets();
+    InitWebSockets();
   }
+  
+  /* Init Btn4 */ 
   yaiButtonPushDown.addCallback(buttonCallback);
   yaiButtonPushDown.setup();
+
+  /* Init Relay */
+  pinMode(RelayPin, OUTPUT);
+
   logger.info("Ready");
 }
 
@@ -70,7 +76,7 @@ void loop(void) {
     clientMqtt.loop();
   }
   if (ENABLE_WEBSOCKETS) { 
-    //webSocket.loop();
+    webSocket.loop();
   }
   yaiButtonPushDown.loop();
 }
