@@ -1,0 +1,18 @@
+
+html {
+  font-family: Arial;
+  display: inline-block;
+  margin: 0px auto;
+}
+
+.divClass {
+  width:100%;
+  margin-right: auto;
+  margin-top: 20px;
+  background-color: white;
+  box-shadow: #254C58 1px 0px;
+  border: #3C7D91 5px double; 
+  padding: 10px 10px 10px 10px;
+  overflow-y: scroll;
+  max-height: 433px;  
+}
