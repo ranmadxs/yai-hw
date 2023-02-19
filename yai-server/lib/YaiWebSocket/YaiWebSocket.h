@@ -1,8 +1,11 @@
-#include "YaiContext.h"
+#ifndef YaiWebSocket_h
+#define YaiWebSocket_h
+
 #include <WebSocketsServer.h>
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 
+/*
 String GetMillis() {
    return String(millis(), DEC);
 }
@@ -10,7 +13,7 @@ String GetMillis() {
 String ProcessRequest() {
    return "Milisegundos=" + GetMillis();
 }
-
+*/
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
    switch(type) {
    case WStype_DISCONNECTED:
@@ -20,8 +23,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
       //webSocket.sendTXT(num, "Connected");
       break;
    case WStype_TEXT:
-      String response = ProcessRequest();
-      webSocket.sendTXT(num, response);
+      //String response = ProcessRequest();
+      //webSocket.sendTXT(num, response);
       break;
    }
 }
@@ -33,6 +36,7 @@ void webSocketAppender(String msg) {
 void InitWebSockets() {
    webSocket.begin();
    webSocket.onEvent(webSocketEvent);
-   logger.addAppender(webSocketAppender);
-   Serial.println("WebSocket server started in port:" + String(WEBSOCKET_PORT));
+   Serial.println("WebSocket server started in port:" + String(81));
 }
+
+#endif

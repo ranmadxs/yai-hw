@@ -24,6 +24,7 @@ class YaiController : public YaiHttpSrv {
 
     void httpController() override {
       
+
       getServer()->on("/acercaDe", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, "text/plain", "YaiController Ready");
       });
@@ -41,6 +42,7 @@ class YaiController : public YaiHttpSrv {
       });
       */
 
+      getServer()->serveStatic("/favicon.ico", LittleFS, "/favicon.ico");
       getServer()->serveStatic("/css", LittleFS, "/css");
       getServer()->serveStatic("/js", LittleFS, "/js");
       /*

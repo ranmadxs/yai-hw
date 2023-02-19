@@ -8,7 +8,7 @@
 #include "YaiFS.h"
 #include "YaiActions.hpp"
 #include "YaiCustomAction.hpp"
-#include "YaiWebSocket.hpp"
+#include "YaiWebSocket.h"
 #include "pump/YaiPumpHeight.h"
 
 void testLittleFS();
@@ -60,6 +60,7 @@ void setup(void) {
   if (ENABLE_WEBSOCKETS) { 
     Serial.println(" ######### WEBSOCKET ##########");
     InitWebSockets();
+    logger.addAppender(webSocketAppender);
   }
   
   /* Init Btn4 */ 
@@ -69,6 +70,7 @@ void setup(void) {
   /* Init Relay */
   //pinMode(RelayPin, OUTPUT);
   yaiPumpHeight.setLogger(logger);
+  yaiPumpHeight.addCallback(webSocketAppender);
   yaiPumpHeight.setup();
   logger.info("Ready");
 }

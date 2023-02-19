@@ -1,5 +1,9 @@
 var counterDiv = document.getElementById('counterDiv');
+var wsCallbacks = [];
 
+function addWSCallback(funcionCall){
+  wsCallbacks.push(funcionCall);
+}
 /*
 function updateCounterUI(counter)
 {
@@ -8,7 +12,7 @@ function updateCounterUI(counter)
 */
 
 $( document ).ready(function() {
-  console.log( "jquery ready!" );
+  console.log( "wsClient init!" );
   counterDiv = document.getElementById('counterDiv');
 
   var connection = new WebSocket('ws://' + location.hostname + ':81/', ['arduino']);
@@ -30,6 +34,9 @@ $( document ).ready(function() {
   connection.onmessage = function (e) {
     //updateCounterUI(e.data);
     console.log('Server: ', e.data);
+    wsCallbacks.forEach(callback => {
+      callback(e.data);
+    });
     $("#counterDiv").prepend("<< " + e.data + "</br>");
   };
   
