@@ -28,7 +28,7 @@ console.clear();
         neckWidth: 50, // only applies to round tank
         neckHeight: 50, // only applies to round tank
         fillAnimationColor: null, // used later to set the color while animating.
-        fillMaxValue: 100, // maximum possible value for the main text.
+        fillMaxValue: 110, // maximum possible value for the main text.
         fillMinValue: 0, // minimum possible value for the main text.
         fillValue: null, // value used to display the main text.
         fillUnit: null, // unit that is appended to the main text.
@@ -1389,17 +1389,17 @@ let thresholds = [
 
 let options = {
   tankType: 'tower',
-  fillValue: 55,
+  fillValue: 100,
   fillUnit: "cms",
   supportLabelPadding: 5,
   frontFontColor: "#003B42",
   thresholds: thresholds,
-  lookupTableValue: 1000,
+  lookupTableValue: 0,
   lookupTableValueUnit: 'lts',
   lookupTableValueDecimal: 1,
   changeRateValueDecimal: 3,
   changeRateValueArrowEnabled: true,
-  changeRateValue: 0.3,
+  changeRateValue: 0.0,
   changeRateValueUnit: 'lts/min'
 }
 

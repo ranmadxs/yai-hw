@@ -6,14 +6,42 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">    
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/layout.css">
   </HEad>
   <BODY>
     YaisServer v.%YAI_VERSION% <b>[ %YAI_UID% ]</b> <br/>
-    %YAI_IP%
-    <div id="empty-space"></div>
-    <div id="wrapper" class="wrapper">
-    </div>    
-    <div id="counterDiv" class="divClass">---</div>
+    <div id="empty-space"></div> 
+
+    <ul class="cards">
+      <li class="cards__item">
+        <div class="card" style="width: 100%">
+          <div class="card__image card__image--turbine">
+          </div>
+          <div class="card__content">
+            <div class="card__title">Medidor de Tanque</div>
+            <p class="card__text">
+              <div id="wrapper" class="wrapper"></div>
+            </p>
+            <button class="btn btn--block card__btn">...</button>
+          </div>
+        </div>
+      </li>
+      <li class="cards__item">
+        <div class="card" style="width: 100%">
+          <div class="card__image card__image--matrix">
+          </div>
+          <div class="card__content">
+            <div class="card__title">Logs de Actividad</div>
+            <div class="line-1"></div>
+            <div id="counterDiv" class="divClass">
+            </div>
+            <p class="card__text"></p>
+            <button class="btn btn--block card__btn">Clear</button>
+          </div>
+        </div>
+      </li>      
+    </ul>
+
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.3/d3.js'></script>
     <!--script src='https://code.jquery.com/jquery-3.1.0.js'></script-->

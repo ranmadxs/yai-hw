@@ -4,20 +4,28 @@ html {
   display: inline-block;
   margin: 0px auto;
 }
-
-.divClass {
-  width:95%;
-  margin: 2%;
-  background-color: white;
-  box-shadow: #254C58 1px 0px;
-  border: #3C7D91 5px double; 
-  padding: 10px 10px 10px 10px;
-  overflow-y: scroll;
-  max-height: 433px;  
+.line-1 {
+  height: 5px;
+  background: linear-gradient(
+    to bottom,
+    transparent 2px,
+    black 2px,
+    black 3px,
+    transparent 3px
+  );
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
-body {
-  background-color: #133440
+.divClass {
+  height: 100px;
+  width: 450px;
+  overflow: scroll;
+  overflow-x: hidden;
+  font-size: 0.675rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+     
 }
 
 .wrapper {
