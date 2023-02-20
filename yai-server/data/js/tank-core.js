@@ -1389,7 +1389,7 @@ let thresholds = [
 
 let options = {
   tankType: 'tower',
-  fillValue: 100,
+  fillValue: 1,
   fillUnit: "cms",
   supportLabelPadding: 5,
   frontFontColor: "#003B42",
