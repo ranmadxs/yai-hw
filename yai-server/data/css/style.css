@@ -18,8 +18,8 @@ html {
 }
 
 .divClass {
-  height: 100px;
-  width: 450px;
+  height: 195px;
+  width: 100%;
   overflow: scroll;
   overflow-x: hidden;
   font-size: 0.675rem;

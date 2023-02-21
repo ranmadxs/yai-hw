@@ -1,6 +1,7 @@
 var counterDiv = document.getElementById('counterDiv');
 var wsCallbacks = [];
-
+var logCountTotal = 150;
+var logCount = 0;
 function addWSCallback(funcionCall){
   wsCallbacks.push(funcionCall);
 }
@@ -16,7 +17,10 @@ $( document ).ready(function() {
   counterDiv = document.getElementById('counterDiv');
 
   var connection = new WebSocket('ws://' + location.hostname + ':81/', ['arduino']);
-
+  $("#clearBtn").click(function(){
+    $("#counterDiv").empty();
+    console.log("clear logs");
+  });
   connection.onopen = function () {
     console.log('Connected: ');
     $("#counterDiv").prepend("WS Connected [OK]</br>");
@@ -37,7 +41,21 @@ $( document ).ready(function() {
     wsCallbacks.forEach(callback => {
       callback(e.data);
     });
-    $("#counterDiv").prepend("<< " + e.data + "</br>");
+    logCount++;
+    if(logCount > logCountTotal){
+      //$("#counterDiv").empty();
+      $("#counterDiv p").slice(10).remove();
+      logCount = 0;
+    }
+    var currentDate = new Date();
+    var dateStr =
+    //  ("00" + (currentDate.getMonth() + 1)).slice(-2) + "/" +
+    //  ("00" + currentDate.getDate()).slice(-2) + "/" +
+    //  currentDate.getFullYear() + " " +
+      ("00" + currentDate.getHours()).slice(-2) + ":" +
+      ("00" + currentDate.getMinutes()).slice(-2) + ":" +
+      ("00" + currentDate.getSeconds()).slice(-2);    
+    $("#counterDiv").prepend("<p><b>"+dateStr + "</b> | " + e.data + "</p>");
   };
   
   connection.onclose = function () {
