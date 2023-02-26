@@ -12,6 +12,7 @@ void YaiPumpHeight::setup() {
     pinMode(PIN_TRIG, OUTPUT);
     // Ponemos el pin Echo en modo entrada
     pinMode(PIN_ECHO, INPUT);
+    t0 = millis();
     Serial.println(" ######### YAI PUMP H [OK] ###########");
 }
 
@@ -32,25 +33,33 @@ void YaiPumpHeight::iniciarTrigger() {
 
 
 void YaiPumpHeight::loop() {
-    iniciarTrigger();
-    // La función pulseIn obtiene el tiempo que tarda en cambiar entre estados, en este caso a HIGH
-    unsigned long tiempo = pulseIn(PIN_ECHO, HIGH);
-  
-    // Obtenemos la distancia en cm, hay que convertir el tiempo en segudos ya que está en microsegundos
-    // por eso se multiplica por 0.000001
-    this->distancia = tiempo * 0.000001 * VEL_SONIDO / 2.0;
-    float heigthH2OTank = HEIGHT_MAX + HEIGHT_OFFSET - (this->distancia);
-    String logMsg = String(this->distancia) + "cm";
-    float vol = TANK_MAX_VOL * (heigthH2OTank - HEIGHT_OFFSET) / HEIGHT_MAX;
-    String msg = "{ \"type\":\"YAI_TANK_HEIGHT\", \"distance\": " + String(this->distancia) 
-      +  ", \"avg_speed\": 0.300, \"height_max\": "+HEIGHT_MAX+", \"height\": "+heigthH2OTank+", \"volume\": "+vol+"}";
-    //webSocket.broadcastTXT(msg);
-    for (int i=0; i < this->totalCallbacks; i++) {
-      callbacks[i].function(msg); 
-    }    
-    this->logger.debug(logMsg);
-    //Serial.print(this->distancia);
-    //Serial.print("cm");
-    //Serial.println();
-    delay(500);
+    this->num_ciclos = this->num_ciclos + 1;
+
+    if (this->num_ciclos > 5000) {
+      this->num_ciclos = 0;
+      this->t1 = millis();
+      this->dt = this->t1 - this->t0;
+      iniciarTrigger();
+      // La función pulseIn obtiene el tiempo que tarda en cambiar entre estados, en este caso a HIGH
+      unsigned long tiempo = pulseIn(PIN_ECHO, HIGH);
+    
+      // Obtenemos la distancia en cm, hay que convertir el tiempo en segudos ya que está en microsegundos
+      // por eso se multiplica por 0.000001
+      this->distancia = tiempo * 0.000001 * VEL_SONIDO / 2.0;
+      float heigthH2OTank = HEIGHT_MAX + HEIGHT_OFFSET - (this->distancia);
+      String logMsg = String(this->distancia) + "cm";
+      float vol = TANK_MAX_VOL * (heigthH2OTank - HEIGHT_OFFSET) / HEIGHT_MAX;
+      String msg = "{ \"type\":\"YAI_TANK_HEIGHT\", \"distance\": " + String(this->distancia) 
+        +  ", \"avg_speed\": 0.300, \"height_max\": "+HEIGHT_MAX+", \"height\": "+heigthH2OTank+", \"volume\": "+vol+"}";
+      //webSocket.broadcastTXT(msg);
+      for (int i=0; i < this->totalCallbacks; i++) {
+        callbacks[i].function(msg); 
+      }
+      this->clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
+      this->logger.debug(logMsg);
+      //Serial.print(this->distancia);
+      //Serial.print("cm");
+      //Serial.println();
+      //delay(300);
+    }
 }

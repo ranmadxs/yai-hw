@@ -2,6 +2,7 @@
 #define YaiPumpHeight_h
 #include <Arduino.h>
 #include "YaiCommons.hpp"
+#include "YaiContext.h"
 //#include <YaiWebSocket.h>
 //https://helloworld.co.in/article/smart-water-tank
 //https://codepen.io/niamleeson/pen/KgRpvb
@@ -21,10 +22,18 @@ class YaiPumpHeight {
     void setLogger(YaiLog _logger) {
         this->logger = _logger;
     }
+    void setMqtt(PubSubClient _clientMqtt) {
+      this->clientMqtt = _clientMqtt;
+    }
     void addCallback(YaiPumpHeightCallBack lolaso);
 
   private:
     YaiLog logger;
+    unsigned long t0 = 0;
+    unsigned long t1 = 0;
+    unsigned long dt = 0;
+    int num_ciclos = 0;
+    PubSubClient clientMqtt;
     float distancia;
     void iniciarTrigger();
     YaiPumpHeightCallBack callbacks[10];

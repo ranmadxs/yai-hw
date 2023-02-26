@@ -3,13 +3,27 @@
 IPAddress apLocalIp(192, 168, 50, 1);
 IPAddress apSubnetMask(255, 255, 255, 0);
 
+bool YaiWIFI::isConnected() {
+  return WiFi.isConnected();
+}
+
+void YaiWIFI::loop() {
+  if(!this->isConnected()){
+    Serial.print("Reconecting");
+    WiFi.reconnect();
+  }
+}
+
 void YaiWIFI::connect() {
   char* ssid;
   char* password;
+  WiFi.setAutoConnect(true);
+  WiFi.setAutoReconnect(true);  
   for (int j = 0; j < totalWifi; j++) {
     Serial.print("Conectando a " + String(arrayWifi[j][0]) + " ");
     ssid = arrayWifi[j][0];
     password = arrayWifi[j][1];
+
     WiFi.begin(ssid, password);
     for (int k = 0; k < retryWifi; k++) {
       if (WiFi.status() == WL_CONNECTED) {

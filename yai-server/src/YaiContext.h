@@ -7,7 +7,7 @@
 #include "YaiCommons.hpp"
 
 const char* YAI_UID_NAME = "WP01";
-const char* YAI_VERSION="0.1.22-SNAPSHOT";
+const char* YAI_VERSION="0.1.27-SNAPSHOT";
 
 const int LOG_WEB_SOCKET_PORT = 81;
 const int TANK_WEB_SOCKET_PORT = 82;

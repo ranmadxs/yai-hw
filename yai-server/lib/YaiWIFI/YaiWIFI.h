@@ -20,7 +20,8 @@ class YaiWIFI {
 
     void connect();
     void startDNSServer(String dnsSsid);
-
+    bool isConnected();
+    void loop();
     WiFiClient espClient;
     DNSServer dnsServer;
 
