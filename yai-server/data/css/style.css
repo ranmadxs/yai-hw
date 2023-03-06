@@ -21,7 +21,6 @@ html {
   height: 195px;
   width: 100%;
   overflow: scroll;
-  overflow-x: hidden;
   font-size: 0.675rem;
   line-height: 1.5;
   margin-bottom: 1.25rem;

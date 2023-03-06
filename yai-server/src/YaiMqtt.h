@@ -53,7 +53,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... and resubscribe
-      clientMqtt.subscribe(MQTT_TOPIC_ALL); //inYaiTopic
+      clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
       Serial.print("failed, rc=");
       Serial.print(clientMqtt.state());

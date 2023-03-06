@@ -34,11 +34,12 @@ void YaiPumpHeight::iniciarTrigger() {
 
 void YaiPumpHeight::loop() {
     this->num_ciclos = this->num_ciclos + 1;
+    this->num_ciclos_vel++;
 
-    if (this->num_ciclos > 5000) {
-      this->num_ciclos = 0;
+    if ( this->num_ciclos_vel == 0 || this->num_ciclos_vel == 6000) {
       this->t1 = millis();
       this->dt = this->t1 - this->t0;
+      this->t0 = this->t1;
       iniciarTrigger();
       // La función pulseIn obtiene el tiempo que tarda en cambiar entre estados, en este caso a HIGH
       unsigned long tiempo = pulseIn(PIN_ECHO, HIGH);
@@ -47,19 +48,40 @@ void YaiPumpHeight::loop() {
       // por eso se multiplica por 0.000001
       this->distancia = tiempo * 0.000001 * VEL_SONIDO / 2.0;
       float heigthH2OTank = HEIGHT_MAX + HEIGHT_OFFSET - (this->distancia);
-      String logMsg = String(this->distancia) + "cm";
       float vol = TANK_MAX_VOL * (heigthH2OTank - HEIGHT_OFFSET) / HEIGHT_MAX;
-      String msg = "{ \"type\":\"YAI_TANK_HEIGHT\", \"distance\": " + String(this->distancia) 
-        +  ", \"avg_speed\": 0.300, \"height_max\": "+HEIGHT_MAX+", \"height\": "+heigthH2OTank+", \"volume\": "+vol+"}";
-      //webSocket.broadcastTXT(msg);
-      for (int i=0; i < this->totalCallbacks; i++) {
-        callbacks[i].function(msg); 
+
+      if(this->num_ciclos_vel == 0) {
+        this->x0 = vol;
       }
-      this->clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
-      this->logger.debug(logMsg);
-      //Serial.print(this->distancia);
-      //Serial.print("cm");
-      //Serial.println();
-      //delay(300);
+      if(this->num_ciclos_vel == 6000) {
+        this->x1 = vol;
+        this->num_ciclos_vel = 0;
+        this->v0 = (this->x1 - this->x0)/this->dt;
+      }
+      if(this->num_ciclos == 6000){
+        this->num_ciclos = 0;
+        String logMsg = String(this->distancia) + "cm";
+        DynamicJsonDocument  doc(500);
+        DynamicJsonDocument docValueInfo(400);
+        docValueInfo = *(docInfo);
+        doc["type"] = "YAI_TANK_HEIGHT";
+        doc["distance"] = this->distancia;
+        doc["water_flow"] = this->v0 / 60;
+        doc["time"] = this->dt;
+        doc["height"] = heigthH2OTank;
+        doc["height_max"] = HEIGHT_MAX;
+        doc["volume"] = vol;
+        doc["info"] = (*docInfo);
+        /*String msg = "{ \"type\":\"YAI_TANK_HEIGHT\", \"distance\": " + String(this->distancia) 
+          + ", \"water_flow\": "+String(this->v0)+", \"delta_time\": "+String(this->dt)
+          + ", \"height_max\": "+ HEIGHT_MAX+", \"height\": "+heigthH2OTank+", \"volume\": "+vol+"}";
+        */
+        String stccall = "";
+        serializeJson(doc, stccall);
+        for (int i=0; i < this->totalCallbacks; i++) {
+          callbacks[i].function(stccall); 
+        }
+        this->logger.debug(stccall);
+      }
     }
 }

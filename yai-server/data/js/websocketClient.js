@@ -39,6 +39,7 @@ $( document ).ready(function() {
     //updateCounterUI(e.data);
     console.log('Server: ', e.data);
     wsCallbacks.forEach(callback => {
+      //console.log('call: ', e.data);
       callback(e.data);
     });
     logCount++;

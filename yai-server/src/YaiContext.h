@@ -7,7 +7,7 @@
 #include "YaiCommons.hpp"
 
 const char* YAI_UID_NAME = "WP01";
-const char* YAI_VERSION="0.1.27-SNAPSHOT";
+const char* YAI_VERSION="0.1.62-SNAPSHOT";
 
 const int LOG_WEB_SOCKET_PORT = 81;
 const int TANK_WEB_SOCKET_PORT = 82;
@@ -27,19 +27,24 @@ char message_buff[100];
 YaiLog logger(YAI_UID_NAME);
 //const String YAI_UID = "WP01";
 
-//const char* MQTT_SERVER = "40416e7483b74b1496f7c1a2f4d0b1f4.s2.eu.hivemq.cloud";//"broker.hivemq.com";//
-const char* MQTT_SERVER = "broker.hivemq.com";//"broker.hivemq.com";//
+//http://www.hivemq.com/demos/websocket-client/
+
+
 const char* MQTT_TOPIC_IN = "yai-mqtt/in"; //IN
 const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
-const u_int16_t MQTT_PORT = 1883; //1883
-//const u_int16_t MQTT_PORT = 8883; //1883
 
-//const char* mqtt_server = "192.168.1.40";
-//const char* MQTT_USER = "edgsanchez";
-//const char* MQTT_PASSWORD = "Epsilon1";
+//const char* MQTT_SERVER = "192.168.0.171";
+const char* MQTT_SERVER = "broker.hivemq.com";//"broker.hivemq.com";//
+const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
 const char* MQTT_PASSWORD = "test";
+
+//const char* MQTT_SERVER = "40416e7483b74b1496f7c1a2f4d0b1f4.s2.eu.hivemq.cloud";//"broker.hivemq.com";//
+//const u_int16_t MQTT_PORT = 8883; //1883
+//const char* MQTT_USER = "ranmadxs";
+//const char* MQTT_PASSWORD = "epsilon1";
+
 
 const bool ENABLE_WIFI = true;
 const bool ENABLE_HTTP_SRV = true;
@@ -49,10 +54,17 @@ const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
 
 // WiFiClient espClient;
 YaiWIFI yaiWifi;
+
+//WiFiClientSecure yaiWifi; 
+
 PubSubClient clientMqtt(yaiWifi.espClient);
+//PubSubClient clientMqtt(yaiWifi);
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
 
+void mqttCallback(String msg) {
+  clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
+}
 
 void commandFactoryExecute(YaiCommand yaiCommand) {
 	YaiCommand yaiResCmd;
@@ -84,5 +96,6 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
     logger.error(yaiCommand.error);
   }
 }
+
 
 #endif

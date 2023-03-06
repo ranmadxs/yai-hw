@@ -10,6 +10,7 @@
 #include "YaiCustomAction.hpp"
 #include "YaiWebSocket.h"
 #include "pump/YaiPumpHeight.h"
+#include <ArduinoJson.h>
 
 void testLittleFS();
 void reconnect();
@@ -18,10 +19,11 @@ void callback(char* topic, byte* payload, unsigned int length);
 YaiController yaiHttpSrv;
 YaiBtnPushDown yaiButtonPushDown(ESP_D4);
 YaiPumpHeight yaiPumpHeight;
-
+DynamicJsonDocument  docInfo(400);
 
 void setup(void) {
-	Serial.begin(9600);	
+	Serial.begin(9600);
+  docInfo["version"] = YAI_VERSION;
 	Serial.println("");
 	Serial.println(" ###############################");
   String yaiServerVersion = " ## YaiServer v"+String(YAI_VERSION)+" ##";
@@ -45,6 +47,8 @@ void setup(void) {
     String dnsName = "YAI_SRV_" + String(YAI_UID_NAME);
     logger.debug(dnsName);
     yaiWifi.startDNSServer(dnsName);
+    docInfo["mac"] = yaiWifi.getMac();
+    docInfo["local_ip"] = yaiWifi.getIp();
   }
 	
   if (ENABLE_HTTP_SRV) { 
@@ -71,6 +75,8 @@ void setup(void) {
   //pinMode(RelayPin, OUTPUT);
   yaiPumpHeight.setLogger(logger);
   yaiPumpHeight.addCallback(webSocketAppender);
+  yaiPumpHeight.addCallback(mqttCallback);
+  yaiPumpHeight.setDocInfo(&docInfo);
   yaiPumpHeight.setup();
   logger.info("Ready");
 }

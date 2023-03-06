@@ -1399,7 +1399,7 @@ let options = {
   lookupTableValueDecimal: 1,
   changeRateValueDecimal: 3,
   changeRateValueArrowEnabled: true,
-  changeRateValue: 0.0,
+  changeRateValue: 0.000,
   changeRateValueUnit: 'lts/min'
 }
 
@@ -1534,4 +1534,8 @@ function destroy() {
 }
 function updateLookupTableValue(value) {
   tank.updateLookupTableValue(value);
+}
+
+function updateChangeRateValue(value) {
+  tank.updateChangeRateValue(value);
 }
