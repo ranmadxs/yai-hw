@@ -33,6 +33,12 @@ void setup(void) {
 	Serial.println(" ###############################");
   yaiMemory.setup();
 
+  String wifiSSID = yaiMemory.readString(100);
+  if (sizeof(wifiSSID) > 1){
+    Serial.println("Wifi Selected: " + wifiSSID);
+  } else {
+    Serial.println("Wifi not selected");
+  }
   FSInfo fs_info;
   if (LittleFS.begin()) {
 		Serial.println("LittleFS ready");
