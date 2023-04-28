@@ -6,9 +6,18 @@
 #include <DNSServer.h>
 #include <Arduino.h>
 #include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 
 const int totalWifi = 4;
 const int retryWifi = 25;
+
+class YaiWIFICallBack {
+  public:
+    ~YaiWIFICallBack(){}
+    YaiWIFICallBack(void (*f)(String) = 0)
+        : function(f) {}
+    void (*function)(String);
+};
 
 class YaiWIFI {
   public:
@@ -24,10 +33,12 @@ class YaiWIFI {
     void startDNSServer(String dnsSsid);
     bool isConnected();
     void loop();
+    void scanNetworks();
     //WiFiClientSecure espClient;
     //BearSSL::WiFiServerSecure espClient;
     WiFiClient espClient;
     DNSServer dnsServer;
+    void addAppender(YaiWIFICallBack lolaso);
     String getIp() {
       return this->ipLocal;
     }
@@ -41,6 +52,10 @@ class YaiWIFI {
       { "YAI_LUA", "1101000000" },
       { "YAI_HUAWEI_Y9_2019", "1101000000" },
       { "VTR-YAI-5Ghz", "Pana8bc1108" } };
+
+  protected:
+    YaiWIFICallBack callbacks[10];
+    int totalAppender;
 };
 
 #endif

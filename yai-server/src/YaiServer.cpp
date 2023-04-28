@@ -9,6 +9,7 @@
 #include "YaiActions.hpp"
 #include "YaiCustomAction.hpp"
 #include "YaiWebSocket.h"
+#include "YaiMemory.h"
 #include "pump/YaiPumpHeight.h"
 #include <ArduinoJson.h>
 
@@ -20,7 +21,8 @@ YaiController yaiHttpSrv;
 YaiBtnPushDown yaiButtonPushDown(ESP_D4);
 YaiPumpHeight yaiPumpHeight;
 DynamicJsonDocument  docInfo(400);
-
+YaiMemory yaiMemory;
+int numCiclos = 0;
 void setup(void) {
 	Serial.begin(9600);
   docInfo["version"] = YAI_VERSION;
@@ -29,6 +31,7 @@ void setup(void) {
   String yaiServerVersion = " ## YaiServer v"+String(YAI_VERSION)+" ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ###############################");
+  yaiMemory.setup();
 
   FSInfo fs_info;
   if (LittleFS.begin()) {
@@ -44,7 +47,7 @@ void setup(void) {
   }
   if (ENABLE_WIFI) { 
     Serial.println(" ######### DNS Server ###########");
-    String dnsName = "YAI_SRV_" + String(YAI_UID_NAME);
+    String dnsName = "YAI_SRV_";
     logger.debug(dnsName);
     yaiWifi.startDNSServer(dnsName);
     docInfo["mac"] = yaiWifi.getMac();
@@ -58,13 +61,14 @@ void setup(void) {
 
   if (ENABLE_MQTT) { 
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
-    clientMqtt.setCallback(callback);
+    yaiWifi.addAppender(webSocketAppender);
   }
 
   if (ENABLE_WEBSOCKETS) { 
     Serial.println(" ######### WEBSOCKET ##########");
     InitWebSockets();
     logger.addAppender(webSocketAppender);
+    yaiPumpHeight.addCallback(webSocketAppender);
   }
   
   /* Init Btn4 */ 
@@ -73,11 +77,13 @@ void setup(void) {
 
   /* Init Relay */
   //pinMode(RelayPin, OUTPUT);
-  yaiPumpHeight.setLogger(logger);
-  yaiPumpHeight.addCallback(webSocketAppender);
-  yaiPumpHeight.addCallback(mqttCallback);
-  yaiPumpHeight.setDocInfo(&docInfo);
-  yaiPumpHeight.setup();
+  if(ENABLE_YAI_PUMP_HEIGHT) {
+    yaiPumpHeight.setLogger(logger);
+    yaiPumpHeight.addCallback(webSocketAppender);
+    yaiPumpHeight.addCallback(mqttCallback);
+    yaiPumpHeight.setDocInfo(&docInfo);
+    yaiPumpHeight.setup();
+  } 
   logger.info("Ready");
 }
 
@@ -92,5 +98,15 @@ void loop(void) {
     webSocket.loop();
   }
   //yaiButtonPushDown.loop();
-  yaiPumpHeight.loop();
+  if(ENABLE_YAI_PUMP_HEIGHT) {
+    yaiPumpHeight.loop();
+  }
+
+  if(ENABLE_WIFI) {
+    numCiclos = numCiclos + 1;
+    if(numCiclos == 18000) {
+      yaiWifi.scanNetworks();
+      numCiclos = 0;
+    }
+  }
 }

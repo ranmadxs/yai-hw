@@ -4,6 +4,11 @@
 #include <PubSubClient.h>
 #include "YaiContext.h"
 //https://www.hivemq.com/public-mqtt-broker/
+/*
+mosquitto_sub -h localhost -p 1883 -t test/topic
+mosquitto_pub -d -h localhost -p 1883 -t "test/topic" -m "Hola Mundo"
+
+*/
 void callback(char* topic, byte* payload, unsigned int length) {
   String msgPayload = "";
   bool existCmd = false;

@@ -60,6 +60,11 @@ YJ8BWgR5mp4KsuPj/eczZLnKgtDzVLoGjg5VE4dPYKypBYHzeeqX
 )KEY";
 
 
+void YaiWIFI::addAppender(YaiWIFICallBack lolaso){
+  callbacks[totalAppender] = lolaso;
+  totalAppender++;
+}
+
 bool YaiWIFI::isConnected() {
   return WiFi.isConnected();
 }
@@ -117,7 +122,9 @@ void YaiWIFI::connect() {
 }
 
 void YaiWIFI::startDNSServer(String dnsSsid) {
-  apSsid = dnsSsid;
+  String wifiBaseName = WiFi.macAddress();
+  wifiBaseName.replace(":", "");
+  apSsid = dnsSsid + wifiBaseName;
   WiFi.softAPConfig(apLocalIp, apLocalIp, apSubnetMask);
   WiFi.softAP(apSsid);
   dnsServer.setTTL(300);
@@ -129,4 +136,28 @@ void YaiWIFI::startDNSServer(String dnsSsid) {
     Serial.println("MDNS responder started");
   }
   MDNS.addService("http", "tcp", 80);    
+}
+
+void YaiWIFI::scanNetworks() {
+  int numberOfNetworks = WiFi.scanNetworks();
+  DynamicJsonDocument  doc(500);
+  DynamicJsonDocument docValueInfo(400);
+  JsonArray networksArray = doc.createNestedArray("networks");
+  
+  for(int i =0; i<numberOfNetworks; i++) {
+      docValueInfo["ssid"] = WiFi.SSID(i);
+      docValueInfo["rssi"] = WiFi.RSSI(i);
+      networksArray.add(docValueInfo);
+      //Serial.print("Network name: ");
+      //Serial.println(aWiFi.SSID(i));
+      //Serial.print("Signal strength: ");
+      //Serial.println(WiFi.RSSI(i));
+      //Serial.println("-----------------------");
+      
+  }
+  String stccall = "";
+  serializeJson(doc, stccall);
+  for (int i=0; i < this->totalAppender; i++) {
+    callbacks[i].function(stccall); 
+  }
 }
