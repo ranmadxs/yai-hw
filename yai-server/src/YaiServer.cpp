@@ -12,6 +12,7 @@
 #include "YaiMemory.h"
 #include "pump/YaiPumpHeight.h"
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 
 void testLittleFS();
 void reconnect();
@@ -23,22 +24,81 @@ YaiPumpHeight yaiPumpHeight;
 DynamicJsonDocument  docInfo(400);
 YaiMemory yaiMemory;
 int numCiclos = 0;
+
+void eeprom_commit() {
+  if (EEPROM.commit()) {
+    Serial.println("EEPROM successfully committed!");
+  } else {
+    Serial.println("ERROR! EEPROM commit failed!");
+  }
+}
+
+int writeStringToEEPROM(int addrOffset, const String &strToWrite) {
+  Serial.println("writing eeprom ssid:");
+  byte len = strToWrite.length();
+  int c = 0;
+  for (int i = addrOffset; i < (len + addrOffset); ++i) {
+    EEPROM.write(i, strToWrite[c]);
+    c++;
+  }
+  return addrOffset + len;
+}
+
+int writeIntToEEPROM(int offset, int value) {
+  EEPROM.write(offset, value);
+  return offset + 1;
+}
+
+int readIntoFromEEPROM(int offset) {
+  return EEPROM.read(offset);
+}
+
+String readStringFromEEPROM(int start, int addrOffset) {
+  String esid;
+  for (int i = start; i < start + addrOffset; ++i) {
+    esid += char(EEPROM.read(i));
+  }
+  return esid;
+}
+
 void setup(void) {
-	Serial.begin(9600);
+	Serial.begin(115200);
+ 	//Serial.begin(9600);
   docInfo["version"] = YAI_VERSION;
 	Serial.println("");
 	Serial.println(" ###############################");
   String yaiServerVersion = " ## YaiServer v"+String(YAI_VERSION)+" ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ###############################");
-  yaiMemory.setup();
+  Serial.println(" ########EEPROM TEST##########");
+  int eepromAddr1 = 0;
+  EEPROM.begin(512);
+  //delay(3000);
 
-  String wifiSSID = yaiMemory.readString(100);
-  if (sizeof(wifiSSID) > 1){
-    Serial.println("Wifi Selected: " + wifiSSID);
-  } else {
-    Serial.println("Wifi not selected");
-  }
+//write to eeprom
+  String qsid="Segunda v5 prueba de guardado en la EEPROMv 9F";
+  int charLength=qsid.length();
+  int startStr = writeIntToEEPROM(0, charLength);
+  int charlen2 = readIntoFromEEPROM(0);
+  Serial.println(charlen2);
+  //writeStringToEEPROM(startStr, qsid);
+  //eeprom_commit();
+  
+  Serial.println("Reading EEPROM ssid");
+  String lolaso = readStringFromEEPROM(1, charlen2);
+  Serial.println(lolaso);
+  Serial.println(" ########[END]EEPROM TEST##########");
+
+  //TODO: Se debe arreglar el manejo de la memoria
+  //https://www.aranacorp.com/es/uso-de-la-eeprom-con-el-esp8266/
+  //yaiMemory.setup();
+  //yaiMemory.writeString(100, "XDDD_PRUEBA");
+  //String wifiSSID = yaiMemory.readString(100);
+  //if (sizeof(wifiSSID) > 1){
+  //  Serial.println("Wifi Selected: " + wifiSSID);
+  //} else {
+  //  Serial.println("Wifi not selected");
+  //}
   FSInfo fs_info;
   if (LittleFS.begin()) {
 		Serial.println("LittleFS ready");
