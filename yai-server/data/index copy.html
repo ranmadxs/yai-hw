@@ -1,0 +1,59 @@
+<HTML>
+  <HEad>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Yai - Water Pump</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">    
+    <link rel="stylesheet" href="./css/style.css" >
+    <link rel="stylesheet" href="./css/layout.css">
+    <link rel="stylesheet" href="./css/wifi-icon.css">
+  </HEad>
+  <BODY>
+    <div class="mainDiv">
+      <div class="mainDivChild">YaisServer v.%YAI_VERSION% <b>[ %YAI_UID% ]</b></div>
+      <div class="mainDivChild" ><div class="wifi" /></div></div>
+      <div class="mainDivChild" >NOT CONNECTED</div>
+    </div>
+    <ul class="cards">
+      <li class="cards__item">
+        <div class="card" style="width: 100%">
+          <div class="card__image card__image--turbine">
+          </div>
+          <div class="card__content">
+            <div class="card__title">Medidor de Tanque</div>
+            <div id="empty-space">&nbsp;</div>
+            <div id="wrapper" class="wrapper" style="margin: 0 auto;"></div>
+            <div id="empty-space">&nbsp;</div>
+            <button class="btn btn--block card__btn">...</button>
+          </div>
+        </div>
+      </li>
+      <li class="cards__item">
+        <div class="card" style="width: 100%">
+          <div class="card__image card__image--matrix">
+          </div>
+          <div class="card__content">
+            <div class="card__title">Logs de Actividad</div>
+            <div class="line-1"></div>
+            <div id="empty-space"></div>
+            <div id="counterDiv" class="divClass">
+            </div>
+            <div id="empty-space"></div>
+            <button class="btn btn--block card__btn" id="clearBtn">Clear</button>
+          </div>
+        </div>
+      </li>      
+    </ul>
+
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.3/d3.js'></script>
+    <!--script src='https://code.jquery.com/jquery-3.1.0.js'></script-->
+    <!--script type="text/javascript" src="./js/jquery.js"></script-->
+    <script type="text/javascript" src="./js/d3.js"></script>
+    <script type="text/javascript" src="./js/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="./js/tank-core.js"></script>
+    <script type="text/javascript" src="./js/websocketClient.js"></script>    
+    <script type="text/javascript" src="./js/tank-level.js"></script>
+  </BODY>
+</HTML>

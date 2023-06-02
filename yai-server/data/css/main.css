@@ -1,0 +1,14 @@
+.divClass {
+    height: 200px;
+    width: 100%;
+    overflow: scroll;
+    font-size: 0.675rem;
+    line-height: 1.5;       
+  }
+
+  .wrapper {
+    background-color: #2d4e5a;
+    height: 200px;
+    width: 200px;
+    position: relative;
+  }
