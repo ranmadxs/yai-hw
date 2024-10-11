@@ -1,10 +1,10 @@
 #ifndef YaiWIFI_h
 #define YaiWIFI_h
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiClient.h>
-#include <ESP8266mDNS.h>
 #include <DNSServer.h>
 #include <Arduino.h>
+#include <ESPmDNS.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
@@ -24,7 +24,7 @@ class YaiWIFI {
     
     YaiWIFI() {
       connectedWifi = false;
-      apSsid = "YaiDNSServer";
+      apSsid = "YaiRelayDNSServer";
     }
     String getMac(){
       return WiFi.macAddress();
@@ -49,9 +49,9 @@ class YaiWIFI {
     String ipLocal;
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
+      { "Patitas-EXT", "21193120" },
       { "Patitas", "21193120" },
       { "YAI_LUA", "1101000000" },
-      { "YAI_HUAWEI_Y9_2019", "1101000000" },
       { "VTR-YAI-5Ghz", "Pana8bc1108" } };
 
   protected:

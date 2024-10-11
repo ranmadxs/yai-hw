@@ -7,7 +7,7 @@
 #include "YaiCommons.hpp"
 
 const char* YAI_UID_NAME = "WP01";
-const char* YAI_VERSION="0.2.1-SNAPSHOT";
+const char* YAI_VERSION="0.2.2-SNAPSHOT";
 
 const int LOG_WEB_SOCKET_PORT = 81;
 const int TANK_WEB_SOCKET_PORT = 82;
@@ -35,7 +35,7 @@ const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
 //const char* MQTT_SERVER = "192.168.0.179";
-const char* MQTT_SERVER = "broker.hivemq.com";//"broker.hivemq.com";//
+const char* MQTT_SERVER = "broker.mqttdashboard.com";//"broker.hivemq.com";//
 const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
 const char* MQTT_PASSWORD = "test";

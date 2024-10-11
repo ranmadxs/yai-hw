@@ -5,7 +5,7 @@
 #include "YaiMqtt.h"
 
 
-const char* YAI_VERSION="0.5.0-SNAPSHOT";
+const char* YAI_VERSION="0.0.1-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();
@@ -21,7 +21,7 @@ void setup() {
   existCMD = false;
   isBtnActive = false;
   Serial.println(" ####################################");
-  String yaiServerVersion = " ## yai-watter-pump v"+String(YAI_VERSION)+" ##";
+  String yaiServerVersion = " ## tomi-yai-commander v"+String(YAI_VERSION)+" ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ####################################");  
   all_init();
