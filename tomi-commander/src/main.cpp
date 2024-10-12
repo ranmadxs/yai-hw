@@ -3,26 +3,34 @@
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
+//#include "OledDisplay.h"
+#include "KeypadHandler.h"
 
-
-const char* YAI_VERSION="0.0.2-SNAPSHOT";
+const char* YAI_VERSION="0.0.9-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();
+void keyController();
 void btnController();
 void all_off();
 void all_init();
 void all_on();
 
+KeypadHandler keypadHandler;
 
+// Crear instancias de las clases
+// OledDisplay oledDisplay;
 
 void setup() {
+
   Serial.begin(115200); // opens serial port, sets data rate to 115200 bps
   existCMD = false;
   isBtnActive = false;
+  //oledDisplay.iniciarPantalla();
   Serial.println(" ####################################");
   String yaiServerVersion = " ## tomi-yai-commander v"+String(YAI_VERSION)+" ##";
 	Serial.println(yaiServerVersion);
+  logger.debug(yaiServerVersion);
 	Serial.println(" ####################################");  
   all_init();
   all_off();
@@ -42,6 +50,9 @@ void setup() {
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
     clientMqtt.setCallback(callbackMqtt);
   }
+
+
+
   /* Init Button */
   //pinMode(ButtonPin,INPUT);
   // Configuración del pin del botón como entrada
@@ -51,13 +62,25 @@ void setup() {
 void loop() {
   //btnController();
   serialController();
-
+  keyController();
+  
   if (ENABLE_MQTT) { 
     if (!clientMqtt.connected()) {
       reconnect();
     }
     clientMqtt.loop();
   }
+}
+
+void keyController(){
+  char tecla = keypadHandler.obtenerTecla();
+  if (tecla) {
+    // Mostrar en el puerto serial
+    logger.debug("Apretaste el botón: ");
+    logger.debug(String(tecla));
+    // Mostrar en la pantalla OLED
+    //oledDisplay.mostrarTecla(tecla);
+  }  
 }
 
 void btnController() {

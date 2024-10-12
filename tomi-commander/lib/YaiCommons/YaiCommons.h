@@ -3,7 +3,9 @@
 
 #include <Arduino.h>
 #include "YaiWIFI.h"
+#include "YaiLog.h"  // Incluir el archivo de cabecera YaiLog para utilizar el logger
 #include <PubSubClient.h>
+
 #define YAI_LOG_FOLDER						"/logs"
 
 #define YAI_COMMAND_TYPE_SERIAL		"SER"
@@ -21,7 +23,7 @@ const char* MQTT_TOPIC_IN = "yai-mqtt/in"; //IN
 const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
-const char* MQTT_SERVER = "broker.mqttdashboard.com";//"broker.hivemq.com";//
+const char* MQTT_SERVER = "broker.mqttdashboard.com";
 const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
 const char* MQTT_PASSWORD = "test";
@@ -33,7 +35,7 @@ const bool ENABLE_HTTP_SRV = true;
 const bool ENABLE_YAI_PUMP_HEIGHT = false;
 const bool ENABLE_MQTT = true && ENABLE_WIFI;
 const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
-const char* YAI_UID_NAME = "WR01";
+const char* YAI_UID_NAME = "TYC01";
 
 #define EXECUTE_CMD     true
 #define RelayOn         LOW
@@ -89,47 +91,15 @@ NodeMCU32Pins NODEMCU_ARRAY_PINS[] = {
 										PIN_32_D18, PIN_32_D5, PIN_32_D4, PIN_32_D2
 									};
 
-
-const int TOTAL_LOG_CALBACKS = 10;
-
 YaiWIFI yaiWifi;
-//YaiLog logger(YAI_UID_NAME);
 PubSubClient clientMqtt(yaiWifi.espClient);
+
+// Inicialización del logger
+YaiLog logger(YAI_UID_NAME);
 
 void mqttCallback(String msg) {
   clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
 }
-
-class LogAppender {
-  public:
-    ~LogAppender(){}
-    LogAppender(void (*f)(String) = 0)
-        : function(f) {}
-    void (*function)(String);
-};
-
-class YaiLog {
-  public:
-    YaiLog(){};
-    YaiLog(String yr_name);
-    void info(String str);
-    void error(String str);
-    void debug(String str);
-    void warn(String str);
-    void addAppender(LogAppender lolaso);
-
-  protected:
-	  String yrname;
-    //LinkedList<Lolaso> callbacks;
-    LogAppender callbacks[TOTAL_LOG_CALBACKS];
-    int totalAppender;
-    //Elements vector;
-
-  
-  private:
-  
-    void baseLog(String str);
-};
 
 class YaiCommand {
 public:
@@ -171,7 +141,7 @@ public:
   String error;
 
 	String toString(){
-    return (type+","+command+","+p1+","+p2+","+p3+","+p4+","+p5+","+p6+","+p7);
+    return (type+","+command+","+p1+","+p2+","+p3+","+p4+","+p5+","+p6+","+p7+","+p8);
 	}
 };
 
@@ -188,14 +158,11 @@ public:
 		yaiCommand.execute = false;
 		yaiCommand.print = false;
 		if (Serial.available() > 0) {
-			//serialIn = Serial.readStringUntil('\n');
-      serialIn = Serial.readString();
-      // Serial.println(">> " + serialIn);
+			serialIn = Serial.readString();
 			if (serialIn.length() > 0) {
 				yaiCommand.message = serialIn;
 				yaiCommand.type = String(YAI_COMMAND_TYPE_SERIAL);
 				string2YaiCommand(yaiCommand);
-        // Serial.println("<< " + yaiCommand.type);
 			}
 		}
 		return yaiCommand;
@@ -204,12 +171,10 @@ public:
 	void string2YaiCommand(YaiCommand &yaiCommand) {
 		yaiCommand.command = "";
 		yaiCommand.execute = false;
-		// yaiCommand.type = String(YAI_COMMAND_TYPE_NONE);
 		if (yaiCommand.message != "") {
 			yaiCommand.print = true;
 			String root[8];
 			getElementRoot(yaiCommand.message, root);
-			// yaiCommand.type = root[0];
 			yaiCommand.command = root[0];
 			yaiCommand.p1 = root[1];
 			yaiCommand.p2 = root[2];
@@ -238,7 +203,6 @@ public:
 		}
 		return res;
 	}
-	;
 
 	void getElementRoot(String myString, String rootElement[]) {
 		char copy[64];
@@ -247,13 +211,11 @@ public:
 		char *str;
 
 		int i = 0;
-
 		while ((str = strSplit(p, ",", &p)) != NULL) {
 			rootElement[i] = str;
 			i++;
 		}
 	}
-	;
 };
 
 YaiUtil yaiUtil;
@@ -277,28 +239,24 @@ void all_on() {
   }
 }
 
-// TODO: Arreglar el ON y el OFF para que funcione con el nuevo array de pines
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
-    Serial.print("<< ");  //-> Esto se transforma en log debug
+    Serial.print("<< ");
     Serial.println(yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
 
-        // Comando para encender los relés
         if (yaiCommand.command == "ON") {
             Serial.println("POWER ON");
             existCMD = true;
             isBtnActive = true;
 
-            // Procesar los parámetros p1 a p8
             bool algunoEncendido = false;
             int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
                           yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
                           yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
-            // Recorrer los pines, si son mayores que 0, encender los relés correspondientes
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOn);
@@ -306,25 +264,21 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
                 }
             }
 
-            // Si no se especificó ningún relé, encender todos
             if (!algunoEncendido) {
                 all_on();
             }
         }
 
-        // Comando para apagar los relés
         if (yaiCommand.command == "OFF") {
             existCMD = true;
             isBtnActive = false;
             Serial.println("POWER OFF");
 
-            // Procesar los parámetros p1 a p8
             bool algunoApagado = false;
             int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
                           yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
                           yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
-            // Recorrer los pines, si son mayores que 0, apagar los relés correspondientes
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOff);
@@ -332,7 +286,6 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
                 }
             }
 
-            // Si no se especificó ningún relé, apagar todos
             if (!algunoApagado) {
                 all_off();
             }
@@ -352,4 +305,3 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 }
 
 #endif
-

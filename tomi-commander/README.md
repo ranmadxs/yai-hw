@@ -1,30 +1,11 @@
-## Run
+# Tomi-yai-commander
 
-### Run 01SerialPrint
+## Connect to monitor
 
-```bash {"id":"01JA0BQYHGVW5VH7VZEMH4AM1N"}
-
-# Compile
-platformio run
-
-# Compile and upload
-platformio run --target upload
-pio run -t upload --environment nodemcuv2
-pio run -t upload --environment esp32
-
-# if msg error 
-# [Errno 13] Permission denied: '/dev/ttyUSB0'
-
-sudo chown esanchez:esanchez /dev/ttyUSB0
-
-```
-
-# Connect to monitor
-
-## default 9600
+### default 115200
 
 ```bash {"id":"01JA0BQYHGVW5VH7VZEP1Y7EE7"}
-pio device monitor
+pio device monitor -b 9600
 pio device monitor -b 115200
 
 # see serial device monitor send to file out
@@ -33,6 +14,15 @@ pio device monitor -f log2file -f default
 ## List Devices
 
 pio device list
+
+#Clean caches
+pio run --target clean
+
+#install libs
+pio lib install
+
+# compilar
+pio run -t upload --environment esp32
 ```
 
 ## Serial commands
