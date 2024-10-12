@@ -36,6 +36,7 @@ OFF,0,0,0,0,0,0,0,0
 
 # encender sólo el primero
 ON,1,0,0,0,0,0,0,0
+ON,6,0,0,0,0,0,0,0
 
 # encender sólo el primero y el sexto
 ON,1,6,0,0,0,0,0,0

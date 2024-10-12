@@ -6,7 +6,7 @@
 //#include "OledDisplay.h"
 #include "KeypadHandler.h"
 
-const char* YAI_VERSION="0.0.9-SNAPSHOT";
+const char* YAI_VERSION="0.0.15-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();
@@ -72,7 +72,7 @@ void loop() {
   }
 }
 
-void keyController(){
+void keyController_old(){
   char tecla = keypadHandler.obtenerTecla();
   if (tecla) {
     // Mostrar en el puerto serial
@@ -81,6 +81,34 @@ void keyController(){
     // Mostrar en la pantalla OLED
     //oledDisplay.mostrarTecla(tecla);
   }  
+}
+
+
+// Control del teclado para alternar relés con teclas del 1 al 8
+void keyController() {
+  char tecla = keypadHandler.obtenerTecla();
+    if (tecla) {
+    // Mostrar en el puerto serial
+    logger.debug("Apretaste el botón: ");
+    logger.debug(String(tecla));
+    // Mostrar en la pantalla OLED
+    //oledDisplay.mostrarTecla(tecla);
+  } 
+  if (tecla >= '1' && tecla <= '8') { // Acepta teclas del 1 al 8
+    int relayNumber = tecla - '0'; // Convierte la tecla a número (char '1' -> int 1)
+
+    // Crear un comando para alternar el relé correspondiente
+    YaiCommand yaiCommand;
+    yaiCommand.type = "BTN";
+    int currentState = digitalRead(NODEMCU_ARRAY_PINS[relayNumber - 1]);
+    yaiCommand.command = currentState == RelayOn ? "OFF" : "ON";
+    yaiCommand.p1 = String(relayNumber);  // Relé correspondiente del 1 al 8
+    yaiCommand.execute = EXECUTE_CMD;
+    yaiCommand.print = PRINT_CMD;
+
+    // Ejecutar el comando a través de la función commandFactoryExecute
+    commandFactoryExecute(yaiCommand);
+  }
 }
 
 void btnController() {

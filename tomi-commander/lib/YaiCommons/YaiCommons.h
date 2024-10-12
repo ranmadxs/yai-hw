@@ -259,6 +259,10 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
+					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
+					Serial.print("Relay ");
+					Serial.print(pins[i]);
+					Serial.println(currentState == RelayOn ? " OFF" : " ON");
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOn);
                     algunoEncendido = true;
                 }
@@ -281,6 +285,10 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
+					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
+					Serial.print("Relay ");
+					Serial.print(pins[i]);
+					Serial.println(currentState == RelayOn ? " OFF" : " ON");					
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOff);
                     algunoApagado = true;
                 }
