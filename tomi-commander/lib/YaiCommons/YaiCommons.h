@@ -146,6 +146,7 @@ public:
 		p5 = String(NULL_STR_VALUE);
 		p6 = String(NULL_STR_VALUE);
 		p7 = String(NULL_STR_VALUE);
+		p8 = String(NULL_STR_VALUE);
 		address = 0;
 		json = "";
     error = "";
@@ -161,6 +162,7 @@ public:
 	String p5;
 	String p6;
 	String p7;
+	String p8;
 	String json;
 	boolean execute;
 	boolean print;
@@ -277,40 +279,76 @@ void all_on() {
 
 // TODO: Arreglar el ON y el OFF para que funcione con el nuevo array de pines
 void commandFactoryExecute(YaiCommand yaiCommand) {
-	YaiCommand yaiResCmd;
-  	Serial.print("<< ");  //-> Esto se transforma en log debug
-	Serial.println(yaiCommand.toString());
-	if (yaiCommand.execute) {
-    	existCMD = false;
-		if (yaiCommand.command == "ON") {
-			Serial.println("POWER ON");
-			existCMD = true;
-			isBtnActive = true;
-			if(yaiCommand.p1.toInt() > 0){
-				digitalWrite(NODEMCU_ARRAY_PINS[yaiCommand.p1.toInt()-1], RelayOn);
-			} else {
-				all_on();
-			}
-		}
-		if (yaiCommand.command == "OFF") {
-			existCMD = true;
-			isBtnActive = false;
-			Serial.println("POWER OFF");
-			if(yaiCommand.p1.toInt() > 0){
-				digitalWrite(NODEMCU_ARRAY_PINS[yaiCommand.p1.toInt()-1], RelayOff);
-			} else {
-				all_off();
-			}
-		}      
-		if (!existCMD) {
-		yaiCommand.error = yaiCommand.command + " command not found";
-		}		
-	} else {
-		Serial.println("[WARN] Not execute command " + yaiCommand.command);
-	} 
-  if( yaiCommand.error.length() > 1 ) {
-    Serial.println("[ERROR] " + yaiCommand.error);
-  }
+    YaiCommand yaiResCmd;
+    Serial.print("<< ");  //-> Esto se transforma en log debug
+    Serial.println(yaiCommand.toString());
+
+    if (yaiCommand.execute) {
+        existCMD = false;
+
+        // Comando para encender los relés
+        if (yaiCommand.command == "ON") {
+            Serial.println("POWER ON");
+            existCMD = true;
+            isBtnActive = true;
+
+            // Procesar los parámetros p1 a p8
+            bool algunoEncendido = false;
+            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
+                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
+                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
+
+            // Recorrer los pines, si son mayores que 0, encender los relés correspondientes
+            for (int i = 0; i < 8; i++) {
+                if (pins[i] > 0) {
+                    digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOn);
+                    algunoEncendido = true;
+                }
+            }
+
+            // Si no se especificó ningún relé, encender todos
+            if (!algunoEncendido) {
+                all_on();
+            }
+        }
+
+        // Comando para apagar los relés
+        if (yaiCommand.command == "OFF") {
+            existCMD = true;
+            isBtnActive = false;
+            Serial.println("POWER OFF");
+
+            // Procesar los parámetros p1 a p8
+            bool algunoApagado = false;
+            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
+                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
+                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
+
+            // Recorrer los pines, si son mayores que 0, apagar los relés correspondientes
+            for (int i = 0; i < 8; i++) {
+                if (pins[i] > 0) {
+                    digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOff);
+                    algunoApagado = true;
+                }
+            }
+
+            // Si no se especificó ningún relé, apagar todos
+            if (!algunoApagado) {
+                all_off();
+            }
+        }
+
+        if (!existCMD) {
+            yaiCommand.error = yaiCommand.command + " command not found";
+        }
+
+    } else {
+        Serial.println("[WARN] Not execute command " + yaiCommand.command);
+    }
+
+    if (yaiCommand.error.length() > 1) {
+        Serial.println("[ERROR] " + yaiCommand.error);
+    }
 }
 
 #endif

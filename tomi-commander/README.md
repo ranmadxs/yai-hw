@@ -2,7 +2,7 @@
 
 ### Run 01SerialPrint
 
-```bash
+```bash {"id":"01JA0BQYHGVW5VH7VZEMH4AM1N"}
 
 # Compile
 platformio run
@@ -22,7 +22,8 @@ sudo chown esanchez:esanchez /dev/ttyUSB0
 # Connect to monitor
 
 ## default 9600
-```bash
+
+```bash {"id":"01JA0BQYHGVW5VH7VZEP1Y7EE7"}
 pio device monitor
 pio device monitor -b 115200
 
@@ -35,13 +36,17 @@ pio device list
 ```
 
 ## Serial commands
-```bash
+
+```bash {"id":"01JA0BQYHGVW5VH7VZEQCCG27X"}
 
 # encender todos
-ON,0,0,0,0,0,0,0
+ON,0,0,0,0,0,0,0,0
 #apagar todos
-OFF,0,0,0,0,0,0,0
+OFF,0,0,0,0,0,0,0,0
 
 # encender sólo el primero
-ON,1,0,0,0,0,0,0
+ON,1,0,0,0,0,0,0,0
+
+# encender sólo el primero y el sexto
+ON,1,6,0,0,0,0,0,0
 ```
