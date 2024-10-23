@@ -6,7 +6,7 @@
 //#include "OledDisplay.h"
 #include "KeypadHandler.h"
 
-const char* YAI_VERSION="0.0.15-SNAPSHOT";
+const char* YAI_VERSION="0.0.16-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();

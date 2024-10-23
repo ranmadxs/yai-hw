@@ -9,6 +9,9 @@ mosquitto_sub -h localhost -p 1883 -t test/topic
 mosquitto_pub -d -h localhost -p 1883 -t "test/topic" -m "Hola Mundo"
 
 */
+const unsigned long RECONNECT_INTERVAL = 20000; // Intervalo de tiempo de 5 segundos
+unsigned long LAST_RECONNECT_ATTEMPT = RECONNECT_INTERVAL/4; // Variable para almacenar el último intento de reconexión
+
 
 void callbackMqtt(char* topic, byte* payload, unsigned int length) {
   String msgPayload = "";
@@ -41,25 +44,26 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
 }
 
 void reconnect() {
-  // Loop until we're reconnected
-  while (!clientMqtt.connected()) {
+  // Verificar si ha pasado el tiempo definido desde el último intento de reconexión
+  if (!clientMqtt.connected() && (millis() - LAST_RECONNECT_ATTEMPT > RECONNECT_INTERVAL)) {
+    LAST_RECONNECT_ATTEMPT = millis(); // Actualizar el último intento de reconexión
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
+    // Crear un ID de cliente aleatorio
     String clientId = String(YAI_UID_NAME) + " [NodeMCU-ESP32]";
     clientId += String(random(0xffff), HEX);
-    // Attempt to connect
+    // Intentar conectar
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
+      // Una vez conectado, publicar un mensaje...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
-      // ... and resubscribe
+      // ... y volver a suscribirse
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
       Serial.print("failed, rc=");
       Serial.print(clientMqtt.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.print(" try again in ");
+      Serial.print(RECONNECT_INTERVAL / 1000); // Imprime el intervalo en segundos
+      Serial.println(" seconds");
     }
   }
 }
