@@ -81,7 +81,7 @@ class YaiMqtt {
       while (!clientMqtt.connected()) {
         Serial.print("Attempting MQTT connection...");
         // Create a random client ID
-        String clientId = "ESP32Client-";
+        String clientId = MQTT_CLIENT_ID;
         clientId += String(random(0xffff), HEX);
         // Attempt to connect
         if (clientMqtt.connect(clientId.c_str())) {

@@ -1,11 +1,18 @@
 #include "YaiLog.h"
 
+// Colores ANSI para la consola .zsh
+#define ANSI_RESET  ""
+#define ANSI_BLUE  ""
+#define ANSI_RED    ""
+#define ANSI_YELLOW ""
+#define ANSI_GREEN  ""
+
 // Colores ANSI para la consola serial (funcionan en algunos terminales seriales)
-#define ANSI_RESET  "\u001B[0m"
-#define ANSI_BLUE   "\u001B[34m"
-#define ANSI_RED    "\u001B[31m"
-#define ANSI_YELLOW "\u001B[33m"
-#define ANSI_GREEN  "\u001B[32m"
+//#define ANSI_RESET  "\u001B[0m"
+//#define ANSI_BLUE   "\u001B[34m"
+//#define ANSI_RED    "\u001B[31m"
+//#define ANSI_YELLOW "\u001B[33m"
+//#define ANSI_GREEN  "\u001B[32m"
 
 // Función para formatear el tiempo transcurrido desde el inicio (milisegundos) en HH:MM:SS
 String getFormattedTime() {
