@@ -1,10 +1,17 @@
 #ifndef YaiWIFI_h
 #define YaiWIFI_h
-#include <WiFi.h>
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>
+#elif defined(ESP32)
+  #include <WiFi.h>
+  #include <ESPmDNS.h>
+#else
+  #error "Plataforma no soportada"
+#endif
 #include <WiFiClient.h>
 #include <DNSServer.h>
 #include <Arduino.h>
-#include <ESPmDNS.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 

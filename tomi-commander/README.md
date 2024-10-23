@@ -22,7 +22,13 @@ pio run --target clean
 pio lib install
 
 # compilar
+
+pio run --environment esp32
+pio run --environment nodemcuv2
+
+## & subir
 pio run -t upload --environment esp32
+
 ```
 
 ## Serial commands
