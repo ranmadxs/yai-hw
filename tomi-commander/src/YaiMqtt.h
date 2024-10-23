@@ -35,10 +35,10 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
     if (existCmd) {
       commandFactoryExecute(yaiCommand);
     } else {
-      Serial.println("Command not found");
+      logger.error("Command not found");
     }
   } else {
-    Serial.println("MALFORMED COMMAND");
+    logger.error("MALFORMED COMMAND");
   }
   //Serial.println();
 }

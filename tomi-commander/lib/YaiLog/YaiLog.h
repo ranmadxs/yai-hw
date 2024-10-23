@@ -2,15 +2,23 @@
 #define YaiLog_h
 
 #include <Arduino.h>
+#include <logger.h>
 
 #define TOTAL_LOG_CALBACKS 10
+
+// Definiciones de los niveles de log
+const u_int16_t LOG_LEVEL_INFO = 1;
+const u_int16_t LOG_LEVEL_ERROR = 2;
+const u_int16_t LOG_LEVEL_DEBUG = 3;
+const u_int16_t LOG_LEVEL_WARN = 4;
+const u_int16_t LOG_LEVEL_VERBOSE = 5;
 
 class LogAppender {
   public:
     ~LogAppender(){}
-    LogAppender(void (*f)(String) = 0)
+    LogAppender(void (*f)(String, String, int) = 0)
         : function(f) {}
-    void (*function)(String);
+    void (*function)(String, String, int);
 };
 
 class YaiLog {
@@ -29,7 +37,7 @@ class YaiLog {
     int totalAppender;
   
   private:
-    void baseLog(String str);
+    void baseLog(String str, int level);
 };
 
 #endif

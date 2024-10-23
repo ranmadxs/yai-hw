@@ -61,8 +61,6 @@ typedef enum {
 	PIN_RX = 3
 } NodeMCUPins;
 
-NodeMCUPins NODEMCU_OLD_ARRAY_PINS[] = {PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D5, PIN_D6, PIN_D7, PIN_SD3};
-
 typedef enum {
 	PIN_32_D23 = 23,
     PIN_32_D22 = 22,
@@ -86,10 +84,16 @@ typedef enum {
 	PIN_32_D33 = 33
 } NodeMCU32Pins;
 
-NodeMCU32Pins NODEMCU_ARRAY_PINS[] = {
+#if defined(ESP8266)
+	NodeMCUPins NODEMCU_ARRAY_PINS[] = {PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D5, PIN_D6, PIN_D7, PIN_SD3};
+#elif defined(ESP32)
+	NodeMCU32Pins NODEMCU_ARRAY_PINS[] = {
 										PIN_32_D23, PIN_32_D22, PIN_32_D21, PIN_32_D19, 
 										PIN_32_D18, PIN_32_D5, PIN_32_D4, PIN_32_D2
 									};
+#else
+  #error "Plataforma no soportada"
+#endif
 
 YaiWIFI yaiWifi;
 PubSubClient clientMqtt(yaiWifi.espClient);
@@ -241,8 +245,7 @@ void all_on() {
 
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
-    Serial.print("<< ");
-    Serial.println(yaiCommand.toString());
+    logger.debug("<< "+ yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
