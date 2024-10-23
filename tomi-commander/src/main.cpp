@@ -12,9 +12,6 @@
 void serialController();
 void keyController();
 void btnController();
-void all_off();
-void all_init();
-void all_on();
 
 KeypadHandler keypadHandler;
 
@@ -28,10 +25,10 @@ void setup() {
   isBtnActive = false;
   //oledDisplay.iniciarPantalla();
   Serial.println(" ####################################");
-  String yaiServerVersion = " ## tomi-yai-commander v"+String(YAI_VERSION)+" ##";
-	Serial.println(yaiServerVersion);
-  logger.debug(yaiServerVersion);
-	Serial.println(" ####################################");  
+  String yaiServerVersion = " ## tomi-yai-commander v" + String(YAI_VERSION) + " ##";
+  Serial.println(yaiServerVersion);
+  LOG_DEBUG(logger, yaiServerVersion);  // Usamos la macro LOG_DEBUG para capturar archivo y línea
+  Serial.println(" ####################################");  
   all_init();
   all_off();
   // Por defecto dejamos prendido el relay 6
@@ -43,15 +40,13 @@ void setup() {
   if (ENABLE_WIFI) { 
     Serial.println(" ######### DNS Server ###########");
     String dnsName = "YAI_SRV_RELAYS";
-    Serial.println(dnsName);
+    LOG_INFO(logger, dnsName);  // Usamos la macro LOG_INFO
     yaiWifi.startDNSServer(dnsName);
   }
   if (ENABLE_MQTT) { 
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
     clientMqtt.setCallback(callbackMqtt);
   }
-
-
 
   /* Init Button */
   //pinMode(ButtonPin,INPUT);
@@ -72,25 +67,25 @@ void loop() {
   }
 }
 
+// Función para el controlador del teclado antiguo
 void keyController_old(){
   char tecla = keypadHandler.obtenerTecla();
   if (tecla) {
     // Mostrar en el puerto serial
-    logger.debug("Apretaste el botón: ");
-    logger.debug(String(tecla));
+    LOG_DEBUG(logger, "Apretaste el botón: ");
+    LOG_DEBUG(logger, String(tecla));
     // Mostrar en la pantalla OLED
     //oledDisplay.mostrarTecla(tecla);
   }  
 }
 
-
 // Control del teclado para alternar relés con teclas del 1 al 8
 void keyController() {
   char tecla = keypadHandler.obtenerTecla();
-    if (tecla) {
+  if (tecla) {
     // Mostrar en el puerto serial
-    logger.debug("Apretaste el botón: ");
-    logger.debug(String(tecla));
+    LOG_DEBUG(logger, "Apretaste el botón: ");
+    LOG_DEBUG(logger, String(tecla));
     // Mostrar en la pantalla OLED
     //oledDisplay.mostrarTecla(tecla);
   } 
@@ -111,12 +106,13 @@ void keyController() {
   }
 }
 
+// Función para controlar el botón físico
 void btnController() {
   if (digitalRead(BUTTON_PIN) == 1) {
-    isBtnActive = isBtnActive?false:true;
+    isBtnActive = isBtnActive ? false : true;
     YaiCommand yaiCommand;
     yaiCommand.type = "BTN";
-    yaiCommand.command = isBtnActive?"ON":"OFF";
+    yaiCommand.command = isBtnActive ? "ON" : "OFF";
     yaiCommand.execute = EXECUTE_CMD;
     yaiCommand.print = PRINT_CMD;
     commandFactoryExecute(yaiCommand);
@@ -124,6 +120,7 @@ void btnController() {
   }
 }
 
+// Controlador para manejar comandos desde el puerto serial
 void serialController() {
 	YaiCommand yaiResCmd;
 	YaiCommand yaiCommand;

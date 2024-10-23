@@ -245,7 +245,7 @@ void all_on() {
 
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
-    logger.debug("<< "+ yaiCommand.toString());
+    LOG_DEBUG(logger, "<< "+ yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
