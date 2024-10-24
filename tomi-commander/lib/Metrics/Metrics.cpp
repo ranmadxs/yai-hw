@@ -34,7 +34,7 @@ Metrics::Metrics(YaiWIFI* yaiWifi, const char* apiKey) {
     xTaskCreatePinnedToCore(
         processMetricsTask,    // Función que manejará las métricas
         "ProcessMetricsTask",  // Nombre de la tarea
-        4096,                  // Tamaño del stack
+        16384,                  // Tamaño del stack
         NULL,                  // Parámetro opcional
         1,                     // Prioridad de la tarea
         NULL,                  // Identificador de la tarea

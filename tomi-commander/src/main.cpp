@@ -28,6 +28,7 @@ YaiTime yaiTime;
 
 void loggerMetricsAppender(String yrname, String msg, String level, const char* file, int line) {
   String levelStr = String(level);
+  metrics.setService(MQTT_CLIENT_ID);
   metrics.sendCountMetric("yai.log." + levelStr + ".count", 1);  // Enviar métrica a Datadog
 }
 
