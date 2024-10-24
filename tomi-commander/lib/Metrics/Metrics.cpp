@@ -146,7 +146,7 @@ void Metrics::sendToDatadogAsync(const String& metricName, float count, const St
 
     // Enviar los parámetros a la cola
     if (xQueueSend(metricsQueue, &taskParams, portMAX_DELAY) != pdPASS) {
-        Serial.println("Error: No se pudo añadir la métrica a la cola.");
+        Serial.println("Metrics :]> Error: No se pudo añadir la métrica a la cola.");
     }
 #elif defined(ESP8266)
     // Usar Ticker para ESP8266
@@ -163,7 +163,6 @@ void Metrics::processMetricsTask(void* param) {
         // Esperar hasta recibir un elemento en la cola
         if (xQueueReceive(metricsQueue, &taskParams, portMAX_DELAY) == pdPASS) {
             // Llamar al método sincrónico para enviar la métrica
-            Serial.println("metricName2=" + String(taskParams.metricName));  // Convertir el char[] a String para el log
             taskParams.instance->sendToDatadog(String(taskParams.metricName), taskParams.count, String(taskParams.service), String(taskParams.host), taskParams.timestamp);
         }
     }
