@@ -13,30 +13,28 @@ String getFormattedTime() {
     return String(timeBuffer);  // Convertir a String y retornar
 }
 
-void serialAppender(String yrname, String msg, int level, const char* file, int line) {
-    String timestamp = getFormattedTime(); // Llamada a la función para obtener la hora
-
-    switch (level) {
+// Función auxiliar para convertir el nivel de log a string
+String getLogLevelString(int level) {
+    switch(level) {
         case LOG_LEVEL_INFO:
-            Serial.print(ANSI_GREEN);  // Color verde para INFO
-            Serial.print("[INFO] ");
-            break;
+            return "INFO";
         case LOG_LEVEL_ERROR:
-            Serial.print(ANSI_RED);  // Color rojo para ERROR
-            Serial.print("[ERROR] ");
-            break;
+            return "ERROR";
         case LOG_LEVEL_DEBUG:
-            Serial.print(ANSI_BLUE);  // Color azul para DEBUG
-            Serial.print("[DEBUG] ");
-            break;
+            return "DEBUG";
         case LOG_LEVEL_WARN:
-            Serial.print(ANSI_YELLOW);  // Color amarillo para WARN
-            Serial.print("[WARN] ");
-            break;
+            return "WARN";
+        case LOG_LEVEL_VERBOSE:
+            return "VERBOSE";
         default:
-            Serial.print("[UNKNOWN LEVEL] ");
-            break;
+            return "UNKNOWN";
     }
+}
+
+void serialAppender(String yrname, String msg, String levelName, const char* file, int line) {
+    String timestamp = getFormattedTime(); // Llamada a la función para obtener la hora
+    Serial.print("["+levelName+ "] ");
+
 
     // Imprimir la marca de tiempo, el archivo, la línea, el nombre del logger y el mensaje
     Serial.print(timestamp);
@@ -49,8 +47,6 @@ void serialAppender(String yrname, String msg, int level, const char* file, int 
     Serial.print(": ");
     Serial.println(msg);
 
-    // Resetear color
-    Serial.print(ANSI_RESET);  // Resetear al color por defecto
 }
 
 YaiLog::YaiLog() : totalAppender(0) {
@@ -68,7 +64,7 @@ void YaiLog::addAppender(LogAppender appender) {
 
 void YaiLog::baseLog(String str, int level, const char* file, int line) {
     for (int i = 0; i < totalAppender; i++) {
-        callbacks[i].function(yrname, str, level, file, line); // Pasa el nombre, archivo, línea y nivel al appender
+        callbacks[i].function(yrname, str, getLogLevelString(level), file, line); // Pasa el nombre, archivo, línea y nivel al appender
     }
 }
 

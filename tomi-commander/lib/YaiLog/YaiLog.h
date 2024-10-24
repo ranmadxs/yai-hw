@@ -29,9 +29,9 @@ const u_int16_t LOG_LEVEL_VERBOSE = 5;
 class LogAppender {
   public:
     ~LogAppender() {}
-    LogAppender(void (*f)(String, String, int, const char*, int) = 0)
+    LogAppender(void (*f)(String, String, String, const char*, int) = 0)
         : function(f) {}
-    void (*function)(String, String, int, const char*, int);
+    void (*function)(String, String, String, const char*, int);
 };
 
 class YaiLog {

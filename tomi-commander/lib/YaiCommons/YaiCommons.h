@@ -35,7 +35,7 @@ const bool ENABLE_HTTP_SRV = true;
 const bool ENABLE_YAI_PUMP_HEIGHT = false;
 const bool ENABLE_MQTT = true && ENABLE_WIFI;
 const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
-const char* YAI_UID_NAME = "TYC01";
+const char* YAI_UID_NAME = MQTT_CLIENT_ID;
 
 #define EXECUTE_CMD     true
 #define RelayOn         LOW
@@ -98,8 +98,9 @@ typedef enum {
 YaiWIFI yaiWifi;
 PubSubClient clientMqtt(yaiWifi.espClient);
 
-// Inicialización del logger
 YaiLog logger(YAI_UID_NAME);
+
+
 
 void mqttCallback(String msg) {
   clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
@@ -307,11 +308,11 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
         }
 
     } else {
-        Serial.println("[WARN] Not execute command " + yaiCommand.command);
+        LOG_WARN(logger, "Not execute command " + yaiCommand.command);
     }
 
     if (yaiCommand.error.length() > 1) {
-        Serial.println("[ERROR] " + yaiCommand.error);
+        LOG_ERROR(logger, yaiCommand.error);
     }
 }
 

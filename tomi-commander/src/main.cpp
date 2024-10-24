@@ -1,26 +1,40 @@
 #include <Arduino.h>
 #include "YaiCommons.h"
+#include "Metrics.h"
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
 //#include "OledDisplay.h"
 #include "KeypadHandler.h"
-
+//#include "YaiGrafana.h"
+#include "YaiTime.h"
 //const char* YAI_VERSION="0.0.20-SNAPSHOT";
 // WiFiClient espClient;
-
+// Clave API de Datadog
+const char* datadogApiKey = "77e599b6cdd39b065667e3d441634fa3";
 void serialController();
 void keyController();
 void btnController();
 
 KeypadHandler keypadHandler;
-
+// Instancias de YaiWIFI y YaiGrafana
+//YaiGrafana grafana(&yaiWifi);
+Metrics metrics(&yaiWifi, datadogApiKey);
 // Crear instancias de las clases
 // OledDisplay oledDisplay;
+// Crear una instancia de YaiTime
+YaiTime yaiTime;
+// Inicialización del logger
+void loggerMetricsAppender(String yrname, String msg, String level, const char* file, int line){
+  String levelStr = String(level);
+  String service = MQTT_CLIENT_ID;
+  metrics.sendCountMetric("aia.log."+levelStr+".count",1, service,yaiWifi.getIp());
+}
 
 void setup() {
 
   Serial.begin(115200); // opens serial port, sets data rate to 115200 bps
+  
   existCMD = false;
   isBtnActive = false;
   //oledDisplay.iniciarPantalla();
@@ -38,6 +52,14 @@ void setup() {
     yaiWifi.connect();
   }
   if (ENABLE_WIFI) { 
+     // Sincronizar el tiempo con NTP y ajustar millis
+    yaiTime.syncTimeWithNTP(&yaiWifi);
+    // Mostrar el timestamp actual en segundos desde la época UNIX
+    
+    Serial.println("Timestamp actual (Epoch): " + String(yaiTime.getCurrentEpoch()));
+    metrics.setOffsetTime(yaiTime.getCurrentEpoch());
+
+    logger.addAppender(LogAppender(loggerMetricsAppender));
     Serial.println(" ######### DNS Server ###########");
     String dnsName = "YAI_SRV_RELAYS";
     LOG_INFO(logger, dnsName);  // Usamos la macro LOG_INFO
@@ -65,18 +87,6 @@ void loop() {
     }
     clientMqtt.loop();
   }
-}
-
-// Función para el controlador del teclado antiguo
-void keyController_old(){
-  char tecla = keypadHandler.obtenerTecla();
-  if (tecla) {
-    // Mostrar en el puerto serial
-    LOG_DEBUG(logger, "Apretaste el botón: ");
-    LOG_DEBUG(logger, String(tecla));
-    // Mostrar en la pantalla OLED
-    //oledDisplay.mostrarTecla(tecla);
-  }  
 }
 
 // Control del teclado para alternar relés con teclas del 1 al 8
