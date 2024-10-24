@@ -8,7 +8,8 @@
 
 #if defined(ESP32)
   #include <freertos/FreeRTOS.h>
-  #include <freertos/task.h>
+  #include <freertos/task.h>      // Para crear, manejar y eliminar tareas en FreeRTOS
+  #include <freertos/queue.h>     // Para manejar colas en FreeRTOS
 #endif
 
 class Metrics {
@@ -24,24 +25,29 @@ private:
     long offsetTime = 0;
     const String endpoint = "https://api.datadoghq.com/api/v1/series?api_key=";
 
-    // Método privado para enviar la solicitud a Datadog
+    // Método privado para enviar la métrica a Datadog (sincrónico)
     void sendToDatadog(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
 
-    // Método privado para enviar la solicitud a Datadog de manera asíncrona
+    // Método privado para manejar el envío de métricas de forma asíncrona
     void sendToDatadogAsync(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
 
-    // Estructura para pasar parámetros a la tarea asíncrona
+    // Estructura para almacenar los parámetros de las métricas en la cola
     struct SendTaskParams {
-        Metrics* instance;
-        String metricName;
+        Metrics* instance;       // Mantener la instancia de Metrics
+        char metricName[64];     // Cambiado a char[] para evitar problemas con FreeRTOS
         float count;
-        String service;
-        String host;
+        char service[32];        // Cambiado a char[]
+        char host[32];           // Cambiado a char[]
         unsigned long timestamp;
     };
 
-    // Tarea asíncrona para ESP32
-    static void sendToDatadogTask(void* params);
+    // Tarea para procesar las métricas en la cola (solo para ESP32)
+    static void processMetricsTask(void* param);
+
+#if defined(ESP32)
+    // Declaración de la cola de métricas para ESP32
+    static QueueHandle_t metricsQueue;
+#endif
 };
 
 #endif
