@@ -20,7 +20,7 @@ void mqttController();
 KeypadHandler keypadHandler;
 // Instancias de YaiWIFI y YaiGrafana
 //YaiGrafana grafana(&yaiWifi);
-Metrics metrics(&yaiWifi, datadogApiKey);
+Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
 // Crear instancias de las clases
 // OledDisplay oledDisplay;
 // Crear una instancia de YaiTime
@@ -29,7 +29,7 @@ YaiTime yaiTime;
 void loggerMetricsAppender(String yrname, String msg, String level, const char* file, int line){
   String levelStr = String(level);
   String service = MQTT_CLIENT_ID;
-  metrics.sendCountMetric("aia.log."+levelStr+".count",1, service,yaiWifi.getIp());
+  metrics.sendCountMetric("yai.log."+levelStr+".count",1, service,yaiWifi.getIp());
 }
 
 void setup() {

@@ -4,6 +4,8 @@
 #include <PubSubClient.h>
 #include "YaiCommons.h"
 
+extern Metrics metrics;
+
 //https://www.hivemq.com/public-mqtt-broker/
 /*
 mosquitto_sub -h localhost -p 1883 -t test/topic
@@ -54,12 +56,14 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     // Intentar conectar
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
+      metrics.sendCountMetric("yai.mqtt.conection.ok.count",1);
       LOG_INFO(logger, "connected");
       // Una vez conectado, publicar un mensaje...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... y volver a suscribirse
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
+      metrics.sendCountMetric("yai.mqtt.conection.error.count",1);
       String errorMsg = "failed, rc=" + String(clientMqtt.state()) +  " try again in " + String(RECONNECT_INTERVAL / 1000) + "[s]";
       LOG_ERROR(logger, errorMsg);
     }

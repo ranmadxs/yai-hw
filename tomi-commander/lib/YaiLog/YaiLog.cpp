@@ -38,13 +38,13 @@ void serialAppender(String yrname, String msg, String levelName, const char* fil
 
     // Imprimir la marca de tiempo, el archivo, la línea, el nombre del logger y el mensaje
     Serial.print(timestamp);
-    Serial.print(" - ");
+    Serial.print("-");
     Serial.print(file);  // Mostrar el archivo
     Serial.print(":");
     Serial.print(line);  // Mostrar la línea
-    Serial.print(" - ");
+    Serial.print("-");
     Serial.print(yrname);
-    Serial.print(": ");
+    Serial.print(":");
     Serial.println(msg);
 
 }

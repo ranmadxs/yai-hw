@@ -34,7 +34,7 @@ Metrics::Metrics(YaiWIFI* yaiWifi, const char* apiKey) {
     xTaskCreatePinnedToCore(
         processMetricsTask,    // Función que manejará las métricas
         "ProcessMetricsTask",  // Nombre de la tarea
-        16384,                 // Tamaño del stack
+        4096,                  // Tamaño del stack
         NULL,                  // Parámetro opcional
         1,                     // Prioridad de la tarea
         NULL,                  // Identificador de la tarea
@@ -43,10 +43,34 @@ Metrics::Metrics(YaiWIFI* yaiWifi, const char* apiKey) {
 #endif
 }
 
+// Constructor sobrecargado que también recibe host y service
+Metrics::Metrics(YaiWIFI* yaiWifi, const char* apiKey, const String& host, const String& service) 
+  : Metrics(yaiWifi, apiKey) {  // Llamamos al constructor original
+    this->host = host;          // Asignamos el valor de host
+    this->service = service;    // Asignamos el valor de service
+}
+
+// Implementación del setter para la variable host
+void Metrics::setHost(const String& newHost) {
+    this->host = newHost;
+}
+
+// Implementación del setter para la variable service
+void Metrics::setService(const String& newService) {
+    this->service = newService;
+}
+
 void Metrics::setOffsetTime(long offsetTime) {
     this->offsetTime = offsetTime;
 }
 
+// Modificación para usar las variables internas de service y host
+void Metrics::sendCountMetric(const String& metricName, float count) {
+    // Reutilizamos la función que tiene los 4 parámetros, pasando los valores internos
+    sendCountMetric(metricName, count, this->service, this->host);
+}
+
+// Método que permite pasar host y service directamente
 void Metrics::sendCountMetric(const String& metricName, float count, const String& service, const String& host) {
     if (this->yaiWifi && this->yaiWifi->isConnected()) {  // Verificar conexión Wi-Fi usando YaiWIFI
         unsigned long timestamp = millis() / 1000 + this->offsetTime;
@@ -56,6 +80,11 @@ void Metrics::sendCountMetric(const String& metricName, float count, const Strin
     } else {
         Serial.println("No hay conexión Wi-Fi.");
     }
+}
+
+// Método privado para encapsular la lógica de envío de la métrica a Datadog (sincrónico) usando las variables internas de service y host
+void Metrics::sendToDatadog(const String& metricName, float count, unsigned long timestamp) {
+    sendToDatadog(metricName, count, this->service, this->host, timestamp);
 }
 
 // Método privado para encapsular la lógica de envío de la métrica a Datadog (sincrónico)
@@ -83,17 +112,16 @@ void Metrics::sendToDatadog(const String& metricName, float count, const String&
 
     // Realizamos la solicitud POST
     int httpResponseCode = http.POST(payload);
-    Serial.println("Metrics.cpp :]> " + payload);
-    //Serial.println(timestamp);
+    Serial.println("Metrics :]> " + payload);
     
     // Verificar el código de respuesta
     if (httpResponseCode > 0) {
-        Serial.print("Metrics.cpp :]> Respuesta HTTP: ");
+        Serial.print("Metrics :]> Respuesta HTTP: ");
         Serial.println(httpResponseCode);
         String response = http.getString();  // Obtener respuesta del servidor
-        //Serial.println("Respuesta del servidor: " + response);
+        //Serial.println("Metrics :]> Respuesta del servidor: " + response);
     } else {
-        Serial.print("Error en la solicitud HTTP: ");
+        Serial.print("Metrics :]> [Error] en la solicitud HTTP: ");
         Serial.println(httpResponseCode);
     }
 
@@ -135,6 +163,7 @@ void Metrics::processMetricsTask(void* param) {
         // Esperar hasta recibir un elemento en la cola
         if (xQueueReceive(metricsQueue, &taskParams, portMAX_DELAY) == pdPASS) {
             // Llamar al método sincrónico para enviar la métrica
+            Serial.println("metricName2=" + String(taskParams.metricName));  // Convertir el char[] a String para el log
             taskParams.instance->sendToDatadog(String(taskParams.metricName), taskParams.count, String(taskParams.service), String(taskParams.host), taskParams.timestamp);
         }
     }

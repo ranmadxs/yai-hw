@@ -16,17 +16,38 @@ class Metrics {
 public:
     // Constructor que recibe un puntero a YaiWIFI y un apiKey opcional
     Metrics(YaiWIFI* yaiWifi, const char* apiKey);  
+    
+    // Sobrecarga del constructor para recibir host y service
+    Metrics(YaiWIFI* yaiWifi, const char* apiKey, const String& host, const String& service);
+
+    // Modificado para usar la variable interna de service
+    void sendCountMetric(const String& metricName, float count);
+    
+    // Método que permite pasar host y service directamente
     void sendCountMetric(const String& metricName, float count, const String& service, const String& host);
+
     void setOffsetTime(long offsetTime);
+    
+    // Setter para la variable host
+    void setHost(const String& newHost);
+    
+    // Setter para la variable service
+    void setService(const String& newService);
 
 private:
     const char* apiKey;
     YaiWIFI* yaiWifi;  // Ahora es un puntero a YaiWIFI
     long offsetTime = 0;
     const String endpoint = "https://api.datadoghq.com/api/v1/series?api_key=";
+    
+    String host;    // Nueva variable privada host
+    String service; // Nueva variable privada service
 
     // Método privado para enviar la métrica a Datadog (sincrónico)
     void sendToDatadog(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
+
+    // Sobrecarga de sendToDatadog que utiliza las variables internas service y host
+    void sendToDatadog(const String& metricName, float count, unsigned long timestamp);
 
     // Método privado para manejar el envío de métricas de forma asíncrona
     void sendToDatadogAsync(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
