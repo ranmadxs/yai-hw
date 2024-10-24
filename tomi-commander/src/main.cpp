@@ -15,6 +15,7 @@ const char* datadogApiKey = "77e599b6cdd39b065667e3d441634fa3";
 void serialController();
 void keyController();
 void btnController();
+void mqttController();
 
 KeypadHandler keypadHandler;
 // Instancias de YaiWIFI y YaiGrafana
@@ -75,18 +76,21 @@ void setup() {
   // Configuración del pin del botón como entrada
   //pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
-
-void loop() {
-  //btnController();
-  serialController();
-  keyController();
-  
+void mqttController(){
   if (ENABLE_MQTT) { 
     if (!clientMqtt.connected()) {
       reconnect();
     }
     clientMqtt.loop();
   }
+}
+
+
+void loop() {
+  //btnController();
+  serialController();
+  keyController();
+  mqttController();
 }
 
 // Control del teclado para alternar relés con teclas del 1 al 8
