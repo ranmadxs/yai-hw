@@ -83,7 +83,7 @@ void Metrics::sendToDatadog(const String& metricName, float count, const String&
 
     // Realizamos la solicitud POST
     int httpResponseCode = http.POST(payload);
-    Serial.println(payload);
+    Serial.println("Metrics.cpp :]> " + payload);
     //Serial.println(timestamp);
     
     // Verificar el código de respuesta
