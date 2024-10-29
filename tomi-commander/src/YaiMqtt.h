@@ -23,7 +23,8 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
     msgPayload = msgPayload + (char)payload[i];
   }
   msgPayload.toUpperCase();
-   LOG_DEBUG(logger, "Message arrived [" + String(topic) + "] " + msgPayload);
+  LOG_DEBUG(logger, "Message arrived [" + String(topic) + "] " + msgPayload);
+  metrics.sendCountMetric("yai.mqtt.message.in.count",1);
 
   if(msgPayload.length() > 10 && msgPayload.indexOf(",") > 0) {
     Serial.println("WIIIIIIIIIII CMD");
@@ -36,11 +37,14 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
       existCmd = true;
     }
     if (existCmd) {
+      metrics.sendCountMetric("yai.mqtt.message.ok.count",1);
       commandFactoryExecute(yaiCommand);
     } else {
+      metrics.sendCountMetric("yai.mqtt.message.error.count",1);
       LOG_ERROR(logger, "Command not found");
     }
   } else {
+    metrics.sendCountMetric("yai.mqtt.message.error.malformed",1);
     LOG_ERROR(logger, "MALFORMED COMMAND");
   }
   //Serial.println();
@@ -56,14 +60,14 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     // Intentar conectar
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
-      metrics.sendCountMetric("yai.mqtt.conection.ok.count",1);
+      metrics.sendCountMetric("yai.mqtt.status.ok.count",1);
       LOG_INFO(logger, "connected");
       // Una vez conectado, publicar un mensaje...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... y volver a suscribirse
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
-      metrics.sendCountMetric("yai.mqtt.conection.error.count",1);
+      metrics.sendCountMetric("yai.mqtt.status.error.count",1);
       String errorMsg = "failed, rc=" + String(clientMqtt.state()) +  " try again in " + String(RECONNECT_INTERVAL / 1000) + "[s]";
       LOG_ERROR(logger, errorMsg);
     }

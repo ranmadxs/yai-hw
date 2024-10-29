@@ -99,7 +99,7 @@ void Metrics::sendToDatadog(const String& metricName, float count, const String&
     payload += "\"points\": [[" + String(timestamp) + ", " + String(count) + "]],";
     payload += "\"type\": \"count\",";
     payload += "\"host\": \"" + host + "\",";
-    payload += "\"tags\": [\"service:" + service + "\"]";
+    payload += "\"tags\": [\"service:" + service + "\", \"version:" + YAI_VERSION + "\"]";
     payload += "}]}";
 
     // Usamos WiFiClientSecure para HTTPS

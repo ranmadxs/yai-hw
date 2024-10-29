@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "YaiWIFI.h"
-#include "YaiGrafana.h"
 #include "YaiTime.h"
 
 #if defined(ESP32)
