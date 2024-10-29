@@ -16,6 +16,9 @@
 #endif
 unsigned long CONTATOR_TOTAL = 150000;
 unsigned long contadorExterno = CONTATOR_TOTAL;
+unsigned long LOG_INFO_COUNTER = 0;
+unsigned long LOG_DEBUG_COUNTER = 0;
+
 const char* datadogApiKey = "77e599b6cdd39b065667e3d441634fa3";
 void serialController();
 void keyController();
@@ -32,6 +35,12 @@ void loggerMetricsAppender(String yrname, String msg, String level, const char* 
   //metrics.setHost(yaiWifi.getIp());
   if (levelStr.equals("ERROR")) {
     metrics.sendCountMetric("yai.log." + levelStr + ".count", 1);  // Enviar métrica a Datadog
+  }
+  if (levelStr.equals("INFO")) {
+    LOG_INFO_COUNTER++;
+  }
+  if (levelStr.equals("DEBUG")) {
+    LOG_DEBUG_COUNTER++;
   }
 }
 
@@ -74,7 +83,7 @@ void setup() {
     yaiWifi.startDNSServer(dnsName);
     metrics.sendCountMetric("yai.wifi.status.ok.count", 1);
   }
-  
+
   if (ENABLE_MQTT) { 
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
     clientMqtt.setCallback(callbackMqtt);
@@ -116,15 +125,25 @@ void mqttController(){
   }
 }
 
-void loop() {
+void metricsController(){
   contadorExterno++;
   if (contadorExterno >= CONTATOR_TOTAL) {
     contadorExterno = 0;
     metrics.sendCountMetric("yai.tomi.commander.keepalive.count", 1);
+    if(LOG_INFO_COUNTER > 0)
+      metrics.sendCountMetric("yai.log.INFO.count", LOG_INFO_COUNTER);  // Enviar métrica a Datadog
+    if(LOG_DEBUG_COUNTER > 0)
+      metrics.sendCountMetric("yai.log.DEBUG.count", LOG_DEBUG_COUNTER);  // Enviar métrica a Datadog
+    LOG_INFO_COUNTER = 0;
+    LOG_DEBUG_COUNTER = 0;
   }
+}
 
+void loop() {
+  yaiWifi.loop();
   serialController();
   keyController();
+  metricsController();
 }
 
 void serialController() {
