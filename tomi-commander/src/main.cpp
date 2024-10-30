@@ -16,6 +16,7 @@
 #endif
 unsigned long CONTATOR_TOTAL = 150000;
 unsigned long contadorExterno = CONTATOR_TOTAL;
+unsigned long contadorWifi = 0;
 unsigned long LOG_INFO_COUNTER = 0;
 unsigned long LOG_DEBUG_COUNTER = 0;
 
@@ -140,7 +141,10 @@ void metricsController(){
 }
 
 void loop() {
-  yaiWifi.loop();
+  contadorWifi++;
+  if (contadorWifi >= CONTATOR_TOTAL/2) {
+    yaiWifi.loop();
+  }
   serialController();
   keyController();
   metricsController();

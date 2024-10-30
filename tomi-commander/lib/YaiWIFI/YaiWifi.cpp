@@ -72,7 +72,7 @@ bool YaiWIFI::isConnected() {
 void YaiWIFI::loop() {
   if(!this->isConnected()){
     Serial.print("Reconecting");
-    WiFi.reconnect();
+    this->connect();
   }
 }
 
