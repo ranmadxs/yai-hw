@@ -23,6 +23,7 @@ const char* MQTT_TOPIC_IN = "yai-mqtt/in"; //IN
 const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
+//const char* MQTT_SERVER = "192.168.1.30";
 const char* MQTT_SERVER = "broker.mqttdashboard.com";
 const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
@@ -263,10 +264,11 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
+
 					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
 					Serial.print("Relay ");
 					Serial.print(pins[i]);
-					Serial.println(currentState == RelayOn ? " OFF" : " ON");
+					Serial.println(" ON");
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOn);
                     algunoEncendido = true;
                 }
@@ -292,7 +294,7 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
 					Serial.print("Relay ");
 					Serial.print(pins[i]);
-					Serial.println(currentState == RelayOn ? " OFF" : " ON");					
+					Serial.println(" OFF");					
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOff);
                     algunoApagado = true;
                 }
