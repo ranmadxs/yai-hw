@@ -90,7 +90,7 @@ void Metrics::sendToDatadog(const String& metricName, float count, unsigned long
 // Método privado para encapsular la lógica de envío de la métrica a Datadog (sincrónico)
 void Metrics::sendToDatadog(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp) {
     // Crear la URL para la API de métricas de Datadog
-    String url = this->endpoint + String(this->apiKey);
+    String url = this->endpoint;
     
     // Crear el payload en formato JSON para enviar la métrica
     String payload = "{";
