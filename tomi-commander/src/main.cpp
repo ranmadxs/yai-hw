@@ -20,11 +20,27 @@ unsigned long contadorWifi = 0;
 unsigned long LOG_INFO_COUNTER = 0;
 unsigned long LOG_DEBUG_COUNTER = 0;
 
-const char* datadogApiKey = "77e599b6cdd39b065667e3d441634fa3";
+// Arreglo para almacenar el conteo de cada tecla presionada
+unsigned long keyPressCounts[16] = {0};
+
+// Arreglo de caracteres que representan las teclas del keypad
+char keyChars[16] = {'1','2','3','A','4','5','6','B','7','8','9','C','*','0','#','D'};
+
+const char* datadogApiKey = "";
 void serialController();
 void keyController();
 void mqttController();
 void mqttControllerTask(void* param);
+
+// Función para obtener el índice de la tecla en el arreglo keyChars
+int getKeyIndex(char keyChar) {
+    for (int i = 0; i < 16; i++) {
+        if (keyChars[i] == keyChar) {
+            return i;
+        }
+    }
+    return -1; // Si la tecla no se encuentra
+}
 
 KeypadHandler keypadHandler;
 Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
@@ -131,12 +147,22 @@ void metricsController(){
   if (contadorExterno >= CONTATOR_TOTAL) {
     contadorExterno = 0;
     metrics.sendCountMetric("yai.tomi.commander.keepalive.count", 1);
+
     if(LOG_INFO_COUNTER > 0)
       metrics.sendCountMetric("yai.log.INFO.count", LOG_INFO_COUNTER);  // Enviar métrica a Datadog
     if(LOG_DEBUG_COUNTER > 0)
       metrics.sendCountMetric("yai.log.DEBUG.count", LOG_DEBUG_COUNTER);  // Enviar métrica a Datadog
     LOG_INFO_COUNTER = 0;
     LOG_DEBUG_COUNTER = 0;
+
+    // Enviar los conteos acumulados de las teclas
+    for (int i = 0; i < 16; i++) {
+        if (keyPressCounts[i] > 0) {
+            String keyName = String(keyChars[i]);
+            metrics.sendCountMetric("yai.keycontroller." + keyName + ".count", keyPressCounts[i]);
+            keyPressCounts[i] = 0; // Reiniciar el conteo después de enviar
+        }
+    }
   }
 }
 
@@ -148,6 +174,7 @@ void loop() {
   serialController();
   keyController();
   metricsController();
+  logger.loop();
 }
 
 void serialController() {
@@ -167,19 +194,29 @@ void keyController() {
   if (tecla) {
     LOG_DEBUG(logger, "Apretaste el botón: ");
     LOG_DEBUG(logger, String(tecla));
-    metrics.sendCountMetric("yai.keycontroller." + String(tecla) + ".count", 1);
-  }
-  if (tecla >= '1' && tecla <= '8') {
-    int relayNumber = tecla - '0';
 
-    YaiCommand yaiCommand;
-    yaiCommand.type = "BTN";
-    int currentState = digitalRead(NODEMCU_ARRAY_PINS[relayNumber - 1]);
-    yaiCommand.command = currentState == RelayOn ? "OFF" : "ON";
-    yaiCommand.p1 = String(relayNumber);
-    yaiCommand.execute = EXECUTE_CMD;
-    yaiCommand.print = PRINT_CMD;
+    // Incrementar el conteo de la tecla presionada
+    int keyIndex = getKeyIndex(tecla);
+    if (keyIndex >= 0) {
+        keyPressCounts[keyIndex]++;
+    }
 
-    commandFactoryExecute(yaiCommand);
+    // Eliminar la llamada directa a sendCountMetric
+    // metrics.sendCountMetric("yai.keycontroller." + String(tecla) + ".count", 1);
+
+    // Resto del código permanece igual
+    if (tecla >= '1' && tecla <= '8') {
+      int relayNumber = tecla - '0';
+
+      YaiCommand yaiCommand;
+      yaiCommand.type = "BTN";
+      int currentState = digitalRead(NODEMCU_ARRAY_PINS[relayNumber - 1]);
+      yaiCommand.command = currentState == RelayOn ? "OFF" : "ON";
+      yaiCommand.p1 = String(relayNumber);
+      yaiCommand.execute = EXECUTE_CMD;
+      yaiCommand.print = PRINT_CMD;
+
+      commandFactoryExecute(yaiCommand);
+    }
   }
 }
