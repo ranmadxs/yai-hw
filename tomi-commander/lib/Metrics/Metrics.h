@@ -37,7 +37,6 @@ private:
     const char* apiKey;
     YaiWIFI* yaiWifi;  // Ahora es un puntero a YaiWIFI
     long offsetTime = 0;
-    //const String endpoint = "https://api.datadoghq.com/api/v1/series?api_key=77e599b6cdd39b065667e3d441634fa3";
     const String endpoint = "https://tomi-metric-collector-production.up.railway.app/metrics";
     
     String host;    // Nueva variable privada host

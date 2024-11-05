@@ -15,7 +15,7 @@ public:
 private:
     YaiWIFI* yaiWifi;  // Ahora es un puntero a YaiWIFI
     const char* lokiEndpoint;  // Endpoint para Loki
-    const char* defaultLokiEndpoint = "https://1030851:glc_eyJvIjoiMTI1NTE5NCIsIm4iOiJzdGFjay0xMDczMDcyLWhsLXdyaXRlLWFpYSIsImsiOiJzOHBLQjVTM3ZRODY5NzlPaHR5cjNDdzciLCJtIjp7InIiOiJwcm9kLXVzLWVhc3QtMCJ9fQ==@logs-prod-006.grafana.net/loki/api/v1/push";  // Endpoint por defecto
+    const char* defaultLokiEndpoint = "";  // Endpoint por defecto
 };
 
 #endif
