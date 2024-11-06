@@ -50,6 +50,8 @@ void loggerMetricsAppender(String yrname, String msg, String level, const char* 
   String levelStr = String(level);
   //metrics.setService(MQTT_CLIENT_ID);
   //metrics.setHost(yaiWifi.getIp());
+  levelStr.toUpperCase();
+  Serial.println(" loggerMetricsAppender::"+ levelStr);
   if (levelStr.equals("ERROR")) {
     metrics.sendCountMetric("yai.log." + levelStr + ".count", 1);  // Enviar métrica a Datadog
   }
