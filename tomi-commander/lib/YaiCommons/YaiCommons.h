@@ -23,6 +23,7 @@ const char* MQTT_TOPIC_IN = "yai-mqtt/in"; //IN
 const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
+//https://www.hivemq.com/demos/websocket-client/
 //const char* MQTT_SERVER = "192.168.1.30";
 const char* MQTT_SERVER = "broker.mqttdashboard.com";
 const u_int16_t MQTT_PORT = 1883; //1883

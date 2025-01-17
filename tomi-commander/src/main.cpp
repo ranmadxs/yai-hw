@@ -21,7 +21,7 @@ unsigned long LOG_INFO_COUNTER = 0;
 unsigned long LOG_DEBUG_COUNTER = 0;
 
 // Arreglo para almacenar el conteo de cada tecla presionada
-unsigned long keyPressCounts[16] = {0};
+//unsigned long keyPressCounts[16] = {0};
 
 // Arreglo de caracteres que representan las teclas del keypad
 char keyChars[16] = {'1','2','3','A','4','5','6','B','7','8','9','C','*','0','#','D'};
@@ -56,10 +56,10 @@ void loggerMetricsAppender(String yrname, String msg, String level, const char* 
     metrics.sendCountMetric("yai.log." + levelStr + ".count", 1);  // Enviar métrica a Datadog
   }
   if (levelStr.equals("INFO")) {
-    LOG_INFO_COUNTER++;
+    //LOG_INFO_COUNTER++;
   }
   if (levelStr.equals("DEBUG")) {
-    LOG_DEBUG_COUNTER++;
+    //LOG_DEBUG_COUNTER++;
   }
 }
 
@@ -149,7 +149,7 @@ void metricsController(){
   if (contadorExterno >= CONTATOR_TOTAL) {
     contadorExterno = 0;
     metrics.sendCountMetric("yai.tomi.commander.keepalive.count", 1);
-
+    /*
     if(LOG_INFO_COUNTER > 0)
       metrics.sendCountMetric("yai.log.INFO.count", LOG_INFO_COUNTER);  // Enviar métrica a Datadog
     if(LOG_DEBUG_COUNTER > 0)
@@ -165,6 +165,7 @@ void metricsController(){
             keyPressCounts[i] = 0; // Reiniciar el conteo después de enviar
         }
     }
+    */
   }
 }
 
@@ -199,10 +200,11 @@ void keyController() {
 
     // Incrementar el conteo de la tecla presionada
     int keyIndex = getKeyIndex(tecla);
+    /*
     if (keyIndex >= 0) {
         keyPressCounts[keyIndex]++;
     }
-
+    */
     // Eliminar la llamada directa a sendCountMetric
     // metrics.sendCountMetric("yai.keycontroller." + String(tecla) + ".count", 1);
 
