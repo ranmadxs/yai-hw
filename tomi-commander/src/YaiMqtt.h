@@ -37,8 +37,20 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
       existCmd = true;
     }
     if (existCmd) {
-      metrics.sendCountMetric("yai.mqtt.message.ok.count",1);
+      //metrics.sendCountMetric("yai.mqtt.message.ok.count",1);
       commandFactoryExecute(yaiCommand);
+
+      int pins[8];
+      getPinsArray(yaiCommand, pins);
+
+      for (int i = 0; i < 8; i++) {
+        if (pins[i] > 0) {
+          String keyName = String(pins[i]);
+          metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);
+        }
+      }
+
+
     } else {
       metrics.sendCountMetric("yai.mqtt.message.error.count",1);
       LOG_ERROR(logger, "Command not found");

@@ -180,7 +180,7 @@ public:
 		yaiCommand.execute = false;
 		if (yaiCommand.message != "") {
 			yaiCommand.print = true;
-			String root[8];
+			String root[9];
 			getElementRoot(yaiCommand.message, root);
 			yaiCommand.command = root[0];
 			yaiCommand.p1 = root[1];
@@ -190,6 +190,7 @@ public:
 			yaiCommand.p5 = root[5];
 			yaiCommand.p6 = root[6];
 			yaiCommand.p7 = root[7];
+			yaiCommand.p8 = root[8];
 		}
 	}
 
@@ -246,22 +247,31 @@ void all_on() {
   }
 }
 
+void getPinsArray(YaiCommand& command, int pins[]) {
+    pins[0] = command.p1.toInt();
+    pins[1] = command.p2.toInt();
+    pins[2] = command.p3.toInt();
+    pins[3] = command.p4.toInt();
+    pins[4] = command.p5.toInt();
+    pins[5] = command.p6.toInt();
+    pins[6] = command.p7.toInt();
+    pins[7] = command.p8.toInt();
+}
+
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
     LOG_DEBUG(logger, "<< "+ yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
-
+        int pins[8];
+        getPinsArray(yaiCommand, pins);
         if (yaiCommand.command == "ON") {
             Serial.println("POWER ON");
             existCMD = true;
             isBtnActive = true;
 
             bool algunoEncendido = false;
-            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
-                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
-                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
@@ -286,9 +296,6 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
             Serial.println("POWER OFF");
 
             bool algunoApagado = false;
-            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
-                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
-                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
