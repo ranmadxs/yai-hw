@@ -25,11 +25,17 @@ const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
 //https://www.hivemq.com/demos/websocket-client/
 //const char* MQTT_SERVER = "192.168.1.30";
+
 const char* MQTT_SERVER = "broker.mqttdashboard.com";
 const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
 const char* MQTT_PASSWORD = "test";
-
+/*
+const char* MQTT_SERVER = "junction.proxy.rlwy.net";    -------> debo crear el emqx en railway, por que funcia bkn. pero debo administrar
+const u_int16_t MQTT_PORT = 16523; //1883
+const char* MQTT_USER = "admin";
+const char* MQTT_PASSWORD = "epsilon1";
+*/
 class YaiCommand;
 void commandFactoryExecute(YaiCommand yaiCommand);
 const bool ENABLE_WIFI = true;

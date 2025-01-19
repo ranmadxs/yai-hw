@@ -81,7 +81,7 @@ void setup() {
   Serial.println(" ####################################");
   all_init();
   all_off();
-  digitalWrite(NODEMCU_ARRAY_PINS[5], RelayOn);
+  //digitalWrite(NODEMCU_ARRAY_PINS[5], RelayOn);
 
   if (ENABLE_WIFI) { 
     Serial.println(" ######### Wifi Client ##########");
