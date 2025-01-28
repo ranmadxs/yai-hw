@@ -195,8 +195,8 @@ void serialController() {
 void keyController() {
   char tecla = keypadHandler.obtenerTecla();
   if (tecla) {
-    LOG_DEBUG(logger, "Apretaste el botón: ");
-    LOG_DEBUG(logger, String(tecla));
+    String msgLog = "[KEYCtrl] Apretaste el botón: " + String(tecla);
+    LOG_DEBUG(logger, msgLog);
 
     // Incrementar el conteo de la tecla presionada
     int keyIndex = getKeyIndex(tecla);

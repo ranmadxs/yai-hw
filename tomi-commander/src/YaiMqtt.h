@@ -23,7 +23,7 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
     msgPayload = msgPayload + (char)payload[i];
   }
   msgPayload.toUpperCase();
-  LOG_DEBUG(logger, "Message arrived [" + String(topic) + "] " + msgPayload);
+  LOG_DEBUG(logger, "[MQTT] Message arrived [" + String(topic) + "] " + msgPayload);
   metrics.sendCountMetric("yai.mqtt.message.in.count",1);
 
   if(msgPayload.length() > 10 && msgPayload.indexOf(",") > 0) {

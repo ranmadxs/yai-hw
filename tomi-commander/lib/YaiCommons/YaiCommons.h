@@ -266,7 +266,7 @@ void getPinsArray(YaiCommand& command, int pins[]) {
 
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
-    LOG_DEBUG(logger, "<< "+ yaiCommand.toString());
+    LOG_DEBUG(logger, "[CMD_EXE] << "+ yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
