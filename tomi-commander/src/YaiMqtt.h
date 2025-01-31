@@ -46,17 +46,17 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
       for (int i = 0; i < 8; i++) {
         if (pins[i] > 0) {
           String keyName = String(pins[i]);
-          //metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);
+          //metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);        
         }
       }
-
-
     } else {
+
       //metrics.sendCountMetric("yai.mqtt.message.error.count",1);
       LOG_ERROR(logger, "Command not found");
     }
   } else {
     //metrics.sendCountMetric("yai.mqtt.message.error.malformed",1);
+
     LOG_ERROR(logger, "MALFORMED COMMAND");
   }
   //Serial.println();
