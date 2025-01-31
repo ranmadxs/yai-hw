@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "YaiCommons.h"
-#include "Metrics.h"
+//#include "Metrics.h"
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
@@ -20,54 +20,22 @@ unsigned long contadorWifi = 0;
 unsigned long LOG_INFO_COUNTER = 0;
 unsigned long LOG_DEBUG_COUNTER = 0;
 
-// Arreglo para almacenar el conteo de cada tecla presionada
-//unsigned long keyPressCounts[16] = {0};
 
-// Arreglo de caracteres que representan las teclas del keypad
-char keyChars[16] = {'1','2','3','A','4','5','6','B','7','8','9','C','*','0','#','D'};
-
-const char* datadogApiKey = "";
+//const char* YAI_VERSION="0.0.20-SNAPSHOT";
+// WiFiClient espClient;
+unsigned long contadorWifi = 0;
 void serialController();
 void keyController();
-void mqttController();
-void mqttControllerTask(void* param);
-
-// Función para obtener el índice de la tecla en el arreglo keyChars
-int getKeyIndex(char keyChar) {
-    for (int i = 0; i < 16; i++) {
-        if (keyChars[i] == keyChar) {
-            return i;
-        }
-    }
-    return -1; // Si la tecla no se encuentra
-}
-
+void btnController();
+unsigned long CONTATOR_TOTAL = 150000;
 KeypadHandler keypadHandler;
 Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
 YaiTime yaiTime;
 
-void loggerMetricsAppender(String yrname, String msg, String level, const char* file, int line) {
-  String levelStr = String(level);
-  //metrics.setService(MQTT_CLIENT_ID);
-  //metrics.setHost(yaiWifi.getIp());
-  levelStr.toUpperCase();
-  Serial.println(" loggerMetricsAppender::"+ levelStr);
-  if (levelStr.equals("ERROR")) {
-    metrics.sendCountMetric("yai.log." + levelStr + ".count", 1);  // Enviar métrica a Datadog
-  }
-  if (levelStr.equals("INFO")) {
-    //LOG_INFO_COUNTER++;
-  }
-  if (levelStr.equals("DEBUG")) {
-    //LOG_DEBUG_COUNTER++;
-  }
-}
-
-#if defined(ESP8266)
-Ticker mqttTicker;  // Ticker para manejar asincronía en ESP8266
-#elif defined(ESP32)
-TaskHandle_t mqttTaskHandle = NULL;  // Identificador para la tarea de FreeRTOS en ESP32
-#endif
+// Crear instancias de las clases
+// OledDisplay oledDisplay;
+const char* datadogApiKey = "";
+//Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
 
 void setup() {
   Serial.begin(115200);
@@ -125,17 +93,16 @@ void setup() {
 #endif
 }
 
-#if defined(ESP32)
-// Función de la tarea para ESP32 (sin lambdas)
-void mqttControllerTask(void* param) {
-  for (;;) {
-    mqttController();
-    vTaskDelay(100 / portTICK_PERIOD_MS);  // Espera 100 ms entre ejecuciones
-  }
-}
-#endif
+void loop() {
 
-void mqttController(){
+  contadorWifi++;
+  if (contadorWifi >= CONTATOR_TOTAL/2) {
+    yaiWifi.loop();
+  }  
+  //btnController();
+  serialController();
+  keyController();
+  logger.loop();
   if (ENABLE_MQTT) { 
     if (!clientMqtt.connected()) {
       reconnect();

@@ -4,7 +4,7 @@
 #include <PubSubClient.h>
 #include "YaiCommons.h"
 
-extern Metrics metrics;
+//extern Metrics metrics;
 
 //https://www.hivemq.com/public-mqtt-broker/
 /*
@@ -24,7 +24,7 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
   }
   msgPayload.toUpperCase();
   LOG_DEBUG(logger, "[MQTT] Message arrived [" + String(topic) + "] " + msgPayload);
-  metrics.sendCountMetric("yai.mqtt.message.in.count",1);
+  //metrics.sendCountMetric("yai.mqtt.message.in.count",1);
 
   if(msgPayload.length() > 10 && msgPayload.indexOf(",") > 0) {
     Serial.println("WIIIIIIIIIII CMD");
@@ -46,17 +46,16 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
       for (int i = 0; i < 8; i++) {
         if (pins[i] > 0) {
           String keyName = String(pins[i]);
-          metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);
-        }
+          //metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);        }
       }
-
-
     } else {
-      metrics.sendCountMetric("yai.mqtt.message.error.count",1);
+
+      //metrics.sendCountMetric("yai.mqtt.message.error.count",1);
       LOG_ERROR(logger, "Command not found");
     }
   } else {
-    metrics.sendCountMetric("yai.mqtt.message.error.malformed",1);
+    //metrics.sendCountMetric("yai.mqtt.message.error.malformed",1);
+
     LOG_ERROR(logger, "MALFORMED COMMAND");
   }
   //Serial.println();
@@ -72,14 +71,14 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     // Intentar conectar
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
-      metrics.sendCountMetric("yai.mqtt.status.ok.count",1);
+      //metrics.sendCountMetric("yai.mqtt.status.ok.count",1);
       LOG_INFO(logger, "connected");
       // Una vez conectado, publicar un mensaje...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... y volver a suscribirse
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
-      metrics.sendCountMetric("yai.mqtt.status.error.count",1);
+      //metrics.sendCountMetric("yai.mqtt.status.error.count",1);
       String errorMsg = "failed, rc=" + String(clientMqtt.state()) +  " try again in " + String(RECONNECT_INTERVAL / 1000) + "[s]";
       LOG_ERROR(logger, errorMsg);
     }

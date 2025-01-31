@@ -1,10 +1,11 @@
 #include "YaiLog.h"
 #if defined(ESP8266)
+  #include <ESP8266WiFi.h>
   #include <ESP8266HTTPClient.h>
 #elif defined(ESP32)
+  #include <WiFi.h>
   #include <HTTPClient.h>
 #endif
-#include <WiFi.h>
 
 // Inicialización de la cola para ESP32
 #if defined(ESP32)
@@ -173,8 +174,10 @@ void YaiLog::sendToDatadogAsync() {
     }
 
 #elif defined(ESP8266)
-    // Para ESP8266, usar Ticker para llamar a sendDataDogLogs de forma asíncrona
-    sendMetricTicker.once_ms(100, [this]() { this->sendDataDogLogsAsync(); });
+
+    // Para ESP8266, usar Ticker para llamar a sendDataDogLogs de forma asíncrona, pero no funciona muy bien! para esp8266
+    // sendMetricTicker.once_ms(100, [this]() { this->sendDataDogLogsAsync(); });
+    this->sendDataDogLogsAsync();
 #endif
 }
 
@@ -184,7 +187,10 @@ void YaiLog::sendDataDogLogsAsync() {
     }
 
     HTTPClient http;
-    http.begin("https://tomi-metric-collector-production.up.railway.app/logs");
+    WiFiClient client;
+    http.begin(client, "https://tomi-metric-collector-production.up.railway.app/logs");    
+    //http.begin("https://tomi-metric-collector-production.up.railway.app/logs");
+
     http.addHeader("Content-Type", "application/json");
 
     // Construir el payload JSON

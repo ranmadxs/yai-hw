@@ -113,6 +113,7 @@ void Metrics::sendToDatadog(const String& metricName, float count, const String&
     // Realizamos la solicitud POST
     int httpResponseCode = http.POST(payload);
     Serial.println("Metrics :]> " + payload);
+
     
     // Verificar el código de respuesta
     if (httpResponseCode > 0) {
@@ -131,28 +132,19 @@ void Metrics::sendToDatadog(const String& metricName, float count, const String&
 
 // Método para manejar la lógica asíncrona de envío de métrica a Datadog
 void Metrics::sendToDatadogAsync(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp) {
-#if defined(ESP32)
-    // Crear una estructura de parámetros para la métrica
-    SendTaskParams taskParams;
-    taskParams.instance = this;  // Pasar la instancia de Metrics
-    strncpy(taskParams.metricName, metricName.c_str(), sizeof(taskParams.metricName) - 1);
-    taskParams.metricName[sizeof(taskParams.metricName) - 1] = '\0';  // Asegurar la terminación nula
-    strncpy(taskParams.service, service.c_str(), sizeof(taskParams.service) - 1);
-    taskParams.service[sizeof(taskParams.service) - 1] = '\0';
-    strncpy(taskParams.host, host.c_str(), sizeof(taskParams.host) - 1);
-    taskParams.host[sizeof(taskParams.host) - 1] = '\0';
-    taskParams.count = count;
-    taskParams.timestamp = timestamp;
 
+#if defined(ESP32)
     // Enviar los parámetros a la cola
     if (xQueueSend(metricsQueue, &taskParams, portMAX_DELAY) != pdPASS) {
         Serial.println("Metrics :]> Error: No se pudo añadir la métrica a la cola.");
     }
 #elif defined(ESP8266)
     // Usar Ticker para ESP8266
-    sendMetricTicker.once(0.1, std::bind(&Metrics::sendToDatadog, this, metricName, count, service, host, timestamp));  // Llamar al método de envío después de 100 ms
+    sendToTicker.once_ms(100, sendToDatadogStatic, &taskParams);
+
 #endif
 }
+#if defined(ESP32)
 
 // Tarea para procesar las métricas en la cola (solo ESP32)
 void Metrics::processMetricsTask(void* param) {
@@ -167,3 +159,6 @@ void Metrics::processMetricsTask(void* param) {
         }
     }
 }
+
+#endif
+

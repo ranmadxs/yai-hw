@@ -11,6 +11,10 @@
   #include <freertos/queue.h>     // Para manejar colas en FreeRTOS
 #endif
 
+#if defined(ESP8266)
+  #include <Ticker.h>
+#endif
+
 class Metrics {
 public:
     // Constructor que recibe un puntero a YaiWIFI y un apiKey opcional
@@ -51,6 +55,7 @@ private:
     // Método privado para manejar el envío de métricas de forma asíncrona
     void sendToDatadogAsync(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
 
+
     // Estructura para almacenar los parámetros de las métricas en la cola
     struct SendTaskParams {
         Metrics* instance;       // Mantener la instancia de Metrics
@@ -64,6 +69,7 @@ private:
     // Tarea para procesar las métricas en la cola (solo para ESP32)
     static void processMetricsTask(void* param);
 
+
 #if defined(ESP32)
     // Declaración de la cola de métricas para ESP32
     static QueueHandle_t metricsQueue;
@@ -71,3 +77,4 @@ private:
 };
 
 #endif
+
