@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "YaiCommons.h"
+//#include "Metrics.h"
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
@@ -8,15 +9,17 @@
 
 //const char* YAI_VERSION="0.0.20-SNAPSHOT";
 // WiFiClient espClient;
-
+unsigned long contadorWifi = 0;
 void serialController();
 void keyController();
 void btnController();
-
+unsigned long CONTATOR_TOTAL = 150000;
 KeypadHandler keypadHandler;
 
 // Crear instancias de las clases
 // OledDisplay oledDisplay;
+const char* datadogApiKey = "";
+//Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
 
 void setup() {
 
@@ -55,10 +58,15 @@ void setup() {
 }
 
 void loop() {
+
+  contadorWifi++;
+  if (contadorWifi >= CONTATOR_TOTAL/2) {
+    yaiWifi.loop();
+  }  
   //btnController();
   serialController();
   keyController();
-  
+  logger.loop();
   if (ENABLE_MQTT) { 
     if (!clientMqtt.connected()) {
       reconnect();

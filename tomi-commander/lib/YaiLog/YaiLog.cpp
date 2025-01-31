@@ -174,8 +174,9 @@ void YaiLog::sendToDatadogAsync() {
     }
 
 #elif defined(ESP8266)
-    // Para ESP8266, usar Ticker para llamar a sendDataDogLogs de forma asíncrona
-    sendMetricTicker.once_ms(100, [this]() { this->sendDataDogLogsAsync(); });
+    // Para ESP8266, usar Ticker para llamar a sendDataDogLogs de forma asíncrona, pero no funciona muy bien! para esp8266
+    // sendMetricTicker.once_ms(100, [this]() { this->sendDataDogLogsAsync(); });
+    this->sendDataDogLogsAsync();
 #endif
 }
 

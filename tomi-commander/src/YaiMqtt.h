@@ -2,6 +2,9 @@
 #define YaiMqtt_h
 #include <Arduino.h>
 #include <PubSubClient.h>
+#include "YaiCommons.h"
+
+//extern Metrics metrics;
 
 //https://www.hivemq.com/public-mqtt-broker/
 /*
@@ -20,7 +23,8 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
     msgPayload = msgPayload + (char)payload[i];
   }
   msgPayload.toUpperCase();
-  Serial.println("Message arrived [" + String(topic) + "] " + msgPayload);
+  LOG_DEBUG(logger, "[MQTT] Message arrived [" + String(topic) + "] " + msgPayload);
+  //metrics.sendCountMetric("yai.mqtt.message.in.count",1);
 
   if(msgPayload.length() > 10 && msgPayload.indexOf(",") > 0) {
     Serial.println("WIIIIIIIIIII CMD");
@@ -33,11 +37,26 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
       existCmd = true;
     }
     if (existCmd) {
+      //metrics.sendCountMetric("yai.mqtt.message.ok.count",1);
       commandFactoryExecute(yaiCommand);
+
+      int pins[8];
+      getPinsArray(yaiCommand, pins);
+
+      for (int i = 0; i < 8; i++) {
+        if (pins[i] > 0) {
+          String keyName = String(pins[i]);
+          //metrics.sendCountMetric("yai.mqtt.message.pin." + keyName + ".count", 1);
+        }
+      }
+
+
     } else {
+      //metrics.sendCountMetric("yai.mqtt.message.error.count",1);
       LOG_ERROR(logger, "Command not found");
     }
   } else {
+    //metrics.sendCountMetric("yai.mqtt.message.error.malformed",1);
     LOG_ERROR(logger, "MALFORMED COMMAND");
   }
   //Serial.println();
@@ -47,61 +66,26 @@ void reconnect() {
   // Verificar si ha pasado el tiempo definido desde el último intento de reconexión
   if (!clientMqtt.connected() && (millis() - LAST_RECONNECT_ATTEMPT > RECONNECT_INTERVAL)) {
     LAST_RECONNECT_ATTEMPT = millis(); // Actualizar el último intento de reconexión
-    Serial.print("Attempting MQTT connection...");
+    LOG_INFO(logger, "Attempting MQTT connection...");
     // Crear un ID de cliente aleatorio
     String clientId = String(YAI_UID_NAME) + " [NodeMCU-ESP32]";
     clientId += String(random(0xffff), HEX);
     // Intentar conectar
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
-      Serial.println("connected");
+      //metrics.sendCountMetric("yai.mqtt.status.ok.count",1);
+      LOG_INFO(logger, "connected");
       // Una vez conectado, publicar un mensaje...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... y volver a suscribirse
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
-      Serial.print("failed, rc=");
-      Serial.print(clientMqtt.state());
-      Serial.print(" try again in ");
-      Serial.print(RECONNECT_INTERVAL / 1000); // Imprime el intervalo en segundos
-      Serial.println(" seconds");
+      //metrics.sendCountMetric("yai.mqtt.status.error.count",1);
+      String errorMsg = "failed, rc=" + String(clientMqtt.state()) +  " try again in " + String(RECONNECT_INTERVAL / 1000) + "[s]";
+      LOG_ERROR(logger, errorMsg);
     }
   }
 }
 
-class YaiMqtt {
-  public:
 
-    YaiMqtt(PubSubClient _clientMqtt){
-      clientMqtt = _clientMqtt;
-
-    };
-
-    void reconnect() {
-      // Loop until we're reconnected
-      while (!clientMqtt.connected()) {
-        Serial.print("Attempting MQTT connection...");
-        // Create a random client ID
-        String clientId = MQTT_CLIENT_ID;
-        clientId += String(random(0xffff), HEX);
-        // Attempt to connect
-        if (clientMqtt.connect(clientId.c_str())) {
-          Serial.println("connected");
-          // Once connected, publish an announcement...
-          clientMqtt.publish("outTopic", "hello world");
-          // ... and resubscribe
-          clientMqtt.subscribe("inYaiTopic");
-        } else {
-          Serial.print("failed, rc=");
-          Serial.print(clientMqtt.state());
-          Serial.println(" try again in 5 seconds");
-          Serial.println("http://www.hivemq.com/demos/websocket-client/");
-          // Wait 5 seconds before retrying
-          delay(5000);
-        }
-      }
-    }
-  private:
-    PubSubClient clientMqtt;
-};
 
 #endif
