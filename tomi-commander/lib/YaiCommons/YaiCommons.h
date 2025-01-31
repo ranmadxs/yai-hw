@@ -35,7 +35,7 @@ const bool ENABLE_HTTP_SRV = true;
 const bool ENABLE_YAI_PUMP_HEIGHT = false;
 const bool ENABLE_MQTT = true && ENABLE_WIFI;
 const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
-const char* YAI_UID_NAME = "TYC01";
+const char* YAI_UID_NAME = MQTT_CLIENT_ID;
 
 #define EXECUTE_CMD     true
 #define RelayOn         LOW
@@ -177,7 +177,7 @@ public:
 		yaiCommand.execute = false;
 		if (yaiCommand.message != "") {
 			yaiCommand.print = true;
-			String root[8];
+			String root[9];
 			getElementRoot(yaiCommand.message, root);
 			yaiCommand.command = root[0];
 			yaiCommand.p1 = root[1];
@@ -187,6 +187,7 @@ public:
 			yaiCommand.p5 = root[5];
 			yaiCommand.p6 = root[6];
 			yaiCommand.p7 = root[7];
+			yaiCommand.p8 = root[8];
 		}
 	}
 
@@ -243,29 +244,38 @@ void all_on() {
   }
 }
 
+void getPinsArray(YaiCommand& command, int pins[]) {
+    pins[0] = command.p1.toInt();
+    pins[1] = command.p2.toInt();
+    pins[2] = command.p3.toInt();
+    pins[3] = command.p4.toInt();
+    pins[4] = command.p5.toInt();
+    pins[5] = command.p6.toInt();
+    pins[6] = command.p7.toInt();
+    pins[7] = command.p8.toInt();
+}
+
 void commandFactoryExecute(YaiCommand yaiCommand) {
     YaiCommand yaiResCmd;
-    LOG_DEBUG(logger, "<< "+ yaiCommand.toString());
+    LOG_DEBUG(logger, "[CMD_EXE] << "+ yaiCommand.toString());
 
     if (yaiCommand.execute) {
         existCMD = false;
-
+        int pins[8];
+        getPinsArray(yaiCommand, pins);
         if (yaiCommand.command == "ON") {
             Serial.println("POWER ON");
             existCMD = true;
             isBtnActive = true;
 
             bool algunoEncendido = false;
-            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
-                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
-                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
 					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
 					Serial.print("Relay ");
 					Serial.print(pins[i]);
-					Serial.println(currentState == RelayOn ? " OFF" : " ON");
+					Serial.println(" ON");
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOn);
                     algunoEncendido = true;
                 }
@@ -282,16 +292,13 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
             Serial.println("POWER OFF");
 
             bool algunoApagado = false;
-            int pins[] = {yaiCommand.p1.toInt(), yaiCommand.p2.toInt(), yaiCommand.p3.toInt(),
-                          yaiCommand.p4.toInt(), yaiCommand.p5.toInt(), yaiCommand.p6.toInt(), 
-                          yaiCommand.p7.toInt(), yaiCommand.p8.toInt()};
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
 					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
 					Serial.print("Relay ");
 					Serial.print(pins[i]);
-					Serial.println(currentState == RelayOn ? " OFF" : " ON");					
+					Serial.println(" OFF");					
                     digitalWrite(NODEMCU_ARRAY_PINS[pins[i] - 1], RelayOff);
                     algunoApagado = true;
                 }
@@ -307,11 +314,11 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
         }
 
     } else {
-        Serial.println("[WARN] Not execute command " + yaiCommand.command);
+        LOG_WARN(logger, "Not execute command " + yaiCommand.command);
     }
 
     if (yaiCommand.error.length() > 1) {
-        Serial.println("[ERROR] " + yaiCommand.error);
+        LOG_ERROR(logger, yaiCommand.error);
     }
 }
 
