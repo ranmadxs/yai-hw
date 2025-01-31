@@ -15,7 +15,7 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-const int totalWifi = 4;
+const int totalWifi = 2;
 const int retryWifi = 25;
 
 class YaiWIFICallBack {
@@ -57,9 +57,7 @@ class YaiWIFI {
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
       { "Patitas-EXT", "21193120" },
-      { "Patitas", "21193120" },
-      { "YAI_LUA", "1101000000" },
-      { "VTR-YAI-5Ghz", "Pana8bc1108" } };
+      { "Patitas", "21193120" } };
 
   protected:
     YaiWIFICallBack callbacks[10];
