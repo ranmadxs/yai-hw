@@ -1,12 +1,11 @@
 #include "YaiLog.h"
 #if defined(ESP8266)
-  #include <ESP8266WiFi.h>
   #include <ESP8266HTTPClient.h>
 #elif defined(ESP32)
   #include <WiFi.h>
   #include <HTTPClient.h>
 #endif
-
+#include <WiFiClientSecure.h>
 // Inicialización de la cola para ESP32
 #if defined(ESP32)
 QueueHandle_t YaiLog::sendQueue = NULL;
@@ -186,8 +185,11 @@ void YaiLog::sendDataDogLogsAsync() {
         return;
     }
 
+    // Usamos WiFiClientSecure para HTTPS
+    WiFiClientSecure client;
+    client.setInsecure();  // No verificamos el certificado (para simplificar)
     HTTPClient http;
-    WiFiClient client;
+
     http.begin(client, "https://tomi-metric-collector-production.up.railway.app/logs");    
     //http.begin("https://tomi-metric-collector-production.up.railway.app/logs");
 
@@ -218,6 +220,9 @@ void YaiLog::sendDataDogLogsAsync() {
     if (httpResponseCode > 0) {
         String response = http.getString();
         // Manejar la respuesta si es necesario
+        Serial.print("YaiLog :]> Respuesta HTTP: ");
+        Serial.println(httpResponseCode);
+        Serial.println(response);
         Serial.println("YaiLog :]> Send to Datadog: logMessageCount=" + String(logMessageCount));
     } else {
         // Manejar error

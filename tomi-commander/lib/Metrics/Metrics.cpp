@@ -140,8 +140,8 @@ void Metrics::sendToDatadogAsync(const String& metricName, float count, const St
     }
 #elif defined(ESP8266)
     // Usar Ticker para ESP8266
-    sendToTicker.once_ms(100, sendToDatadogStatic, &taskParams);
-
+    //sendToTicker.once_ms(100, sendToDatadogStatic, &taskParams);
+    this->sendToDatadog(metricName, count, service, host, timestamp);
 #endif
 }
 #if defined(ESP32)
