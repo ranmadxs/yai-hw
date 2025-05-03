@@ -36,22 +36,7 @@ public:
     
     // Setter para la variable service
     void setService(const String& newService);
-    // Estructura para almacenar los parámetros de las métricas en la cola
-    struct SendTaskParams {
-        Metrics* instance;       // Mantener la instancia de Metrics
-        char metricName[64];     // Cambiado a char[] para evitar problemas con FreeRTOS
-        float count;
-        char service[32];        // Cambiado a char[]
-        char host[32];           // Cambiado a char[]
-        unsigned long timestamp;
-    };
-    // Método auxiliar para llamar a sendToDatadog
-    #if defined(ESP8266)
-    // Función estática que actúa como intermediaria
-    static void sendToDatadogStatic(SendTaskParams* params) {
-        params->instance->sendToDatadog(params->metricName, params->count, params->service, params->host, params->timestamp);
-    }
-#endif
+
 private:
     const char* apiKey;
     YaiWIFI* yaiWifi;  // Ahora es un puntero a YaiWIFI
@@ -70,12 +55,20 @@ private:
     // Método privado para manejar el envío de métricas de forma asíncrona
     void sendToDatadogAsync(const String& metricName, float count, const String& service, const String& host, unsigned long timestamp);
 
+
+    // Estructura para almacenar los parámetros de las métricas en la cola
+    struct SendTaskParams {
+        Metrics* instance;       // Mantener la instancia de Metrics
+        char metricName[64];     // Cambiado a char[] para evitar problemas con FreeRTOS
+        float count;
+        char service[32];        // Cambiado a char[]
+        char host[32];           // Cambiado a char[]
+        unsigned long timestamp;
+    };
+
     // Tarea para procesar las métricas en la cola (solo para ESP32)
     static void processMetricsTask(void* param);
 
-#if defined(ESP8266)
-     Ticker sendToTicker;  // Ticker para manejar asincronía en ESP8266
-#endif
 
 #if defined(ESP32)
     // Declaración de la cola de métricas para ESP32
@@ -84,3 +77,4 @@ private:
 };
 
 #endif
+

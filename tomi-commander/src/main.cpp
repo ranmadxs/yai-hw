@@ -1,25 +1,31 @@
 #include <Arduino.h>
 #include "YaiCommons.h"
-//#include "Metrics.h"
+#include "Metrics.h"
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
 //#include "OledDisplay.h"
 #include "KeypadHandler.h"
+#include "YaiTime.h"
 
 //const char* YAI_VERSION="0.0.20-SNAPSHOT";
 // WiFiClient espClient;
-unsigned long contadorWifi = 0;
+
 void serialController();
 void keyController();
 void btnController();
-unsigned long CONTATOR_TOTAL = 150000;
+unsigned long CONTATOR_TOTAL = 200000;
+unsigned long contadorExterno = CONTATOR_TOTAL;
+unsigned long contadorWifi = 0;
+unsigned long LOG_INFO_COUNTER = 0;
+unsigned long LOG_DEBUG_COUNTER = 0;
 KeypadHandler keypadHandler;
 
 // Crear instancias de las clases
 // OledDisplay oledDisplay;
 const char* datadogApiKey = "";
-//Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
+Metrics metrics(&yaiWifi, datadogApiKey, MQTT_CLIENT_ID, yaiWifi.getIp());
+YaiTime yaiTime;
 
 void setup() {
 
@@ -40,11 +46,19 @@ void setup() {
     Serial.println(" ######### Wifi Client ##########");
     yaiWifi.connect();
   }
-  if (ENABLE_WIFI) { 
+  if (yaiWifi.isConnected()) {
+    metrics.setService(MQTT_CLIENT_ID);
+    metrics.setHost(yaiWifi.getIp());   
+    yaiTime.syncTimeWithNTP(&yaiWifi);
+    Serial.println("Timestamp actual (Epoch): " + String(yaiTime.getCurrentEpoch()));
+    metrics.setOffsetTime(yaiTime.getCurrentEpoch());
+
+    //logger.addAppender(LogAppender(loggerMetricsAppender));
     Serial.println(" ######### DNS Server ###########");
     String dnsName = "YAI_SRV_RELAYS";
     LOG_INFO(logger, dnsName);  // Usamos la macro LOG_INFO
     yaiWifi.startDNSServer(dnsName);
+    metrics.sendCountMetric("yai.wifi.status.ok.count", 1);
   }
   if (ENABLE_MQTT) { 
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
@@ -55,6 +69,14 @@ void setup() {
   //pinMode(ButtonPin,INPUT);
   // Configuración del pin del botón como entrada
   //pinMode(BUTTON_PIN, INPUT_PULLUP);
+}
+
+void metricsController(){
+  contadorExterno++;
+  if (contadorExterno >= CONTATOR_TOTAL) {
+    contadorExterno = 0;
+    metrics.sendCountMetric("yai.tomi.commander.keepalive.count", 1);
+  }
 }
 
 void loop() {
@@ -73,6 +95,7 @@ void loop() {
     }
     clientMqtt.loop();
   }
+  metricsController();
 }
 
 // Función para el controlador del teclado antiguo

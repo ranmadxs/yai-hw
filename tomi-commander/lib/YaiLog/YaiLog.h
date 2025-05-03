@@ -88,7 +88,7 @@ class YaiLog {
     void dataDogAppender(String yrname, String msg, String levelName, const char* file, int line);
     void sendDataDogLogs();
     void addLogMessage(String message, String level);
-    static const int MAX_LOG_MESSAGES = 2;
+    static const int MAX_LOG_MESSAGES = 5;
     LogMessage logMessages[MAX_LOG_MESSAGES];
     int logMessageCount;
     unsigned long lastSendTime;

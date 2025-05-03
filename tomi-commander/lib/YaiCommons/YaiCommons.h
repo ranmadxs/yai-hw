@@ -23,11 +23,19 @@ const char* MQTT_TOPIC_IN = "yai-mqtt/in"; //IN
 const char* MQTT_TOPIC_ALL = "yai-mqtt/#"; //IN
 const char* MQTT_TOPIC_OUT = "yai-mqtt/out";
 
+//https://www.hivemq.com/demos/websocket-client/
+//const char* MQTT_SERVER = "192.168.1.30";
+
 const char* MQTT_SERVER = "broker.mqttdashboard.com";
 const u_int16_t MQTT_PORT = 1883; //1883
 const char* MQTT_USER = "test";
 const char* MQTT_PASSWORD = "test";
-
+/*
+const char* MQTT_SERVER = "junction.proxy.rlwy.net";    -------> debo crear el emqx en railway, por que funcia bkn. pero debo administrar
+const u_int16_t MQTT_PORT = 16523; //1883
+const char* MQTT_USER = "admin";
+const char* MQTT_PASSWORD = "epsilon1";
+*/
 class YaiCommand;
 void commandFactoryExecute(YaiCommand yaiCommand);
 const bool ENABLE_WIFI = true;
@@ -98,8 +106,9 @@ typedef enum {
 YaiWIFI yaiWifi;
 PubSubClient clientMqtt(yaiWifi.espClient);
 
-// Inicialización del logger
 YaiLog logger(YAI_UID_NAME);
+
+
 
 void mqttCallback(String msg) {
   clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
@@ -272,6 +281,7 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 
             for (int i = 0; i < 8; i++) {
                 if (pins[i] > 0) {
+
 					int currentState = digitalRead(NODEMCU_ARRAY_PINS[i]);
 					Serial.print("Relay ");
 					Serial.print(pins[i]);
