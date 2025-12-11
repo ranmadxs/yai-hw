@@ -5,7 +5,7 @@
 #include "YaiMqtt.h"
 
 
-const char* YAI_VERSION="0.5.0-SNAPSHOT";
+const char* YAI_VERSION="0.6.4-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();
@@ -27,7 +27,7 @@ void setup() {
   all_init();
   all_off();
   // Por defecto dejamos prendido el relay 6
-  digitalWrite(NODEMCU_ARRAY_PINS[5], RelayOn);
+  digitalWrite(ARRAY_PINS[5], RelayOn);
   if (ENABLE_WIFI) { 
     Serial.println(" ######### Wifi Client ##########");
     yaiWifi.connect();

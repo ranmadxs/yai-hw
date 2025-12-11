@@ -1,14 +1,24 @@
 #ifndef YaiWIFI_h
 #define YaiWIFI_h
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <DNSServer.h>
 #include <Arduino.h>
-#include <ESPmDNS.h>
-#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-const int totalWifi = 4;
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>
+  #include <DNSServer.h>
+#elif defined(ESP32)
+  #include <WiFi.h>
+  #include <ESPmDNS.h>
+  #include <DNSServer.h>
+#else
+  #error "Plataforma no soportada. Solo ESP8266 y ESP32 son compatibles."
+#endif
+
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+
+const int totalWifi = 5;
 const int retryWifi = 25;
 
 class YaiWIFICallBack {
@@ -49,6 +59,7 @@ class YaiWIFI {
     String ipLocal;
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
+      { "YaiCosta", "1101000000" },
       { "Patitas-EXT", "21193120" },
       { "Patitas", "21193120" },
       { "YAI_LUA", "1101000000" },

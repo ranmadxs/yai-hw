@@ -59,10 +59,15 @@ typedef enum {
 	PIN_RX = 3
 } NodeMCUPins;
 
-NodeMCUPins NODEMCU_OLD_ARRAY_PINS[] = {PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D5, PIN_D6, PIN_D7, PIN_SD3};
-
-typedef enum {
-	PIN_32_D23 = 23,
+#if defined(ESP8266)
+  // Para ESP8266 (NodeMCU v2)
+  NodeMCUPins NODEMCU_ARRAY_PINS[] = {PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D5, PIN_D6, PIN_D7, PIN_SD3};
+  #define ARRAY_PINS NODEMCU_ARRAY_PINS
+  #define ARRAY_PINS_SIZE (sizeof(NODEMCU_ARRAY_PINS)/sizeof(NODEMCU_ARRAY_PINS[0]))
+#elif defined(ESP32)
+  // Para ESP32
+  typedef enum {
+    PIN_32_D23 = 23,
     PIN_32_D22 = 22,
     PIN_32_TX0 = 1,
     PIN_32_RX0 = 3,
@@ -71,23 +76,27 @@ typedef enum {
     PIN_32_D18 = 18,
     PIN_32_D5 = 5,
     PIN_32_TX2 = 17,
-	PIN_32_RX2 = 16,
-	PIN_32_D4 = 4,
-	PIN_32_D2 = 2,
-	PIN_32_D15 = 15,
-
-	PIN_32_VP = 36,
-	PIN_32_VN = 39,
-	PIN_32_D34 = 34,
-	PIN_32_D35 = 35,
-	PIN_32_D32 = 32,
-	PIN_32_D33 = 33
-} NodeMCU32Pins;
-
-NodeMCU32Pins NODEMCU_ARRAY_PINS[] = {
-										PIN_32_D23, PIN_32_D22, PIN_32_D21, PIN_32_D19, 
-										PIN_32_D18, PIN_32_D5, PIN_32_D4, PIN_32_D2
-									};
+    PIN_32_RX2 = 16,
+    PIN_32_D4 = 4,
+    PIN_32_D2 = 2,
+    PIN_32_D15 = 15,
+    PIN_32_VP = 36,
+    PIN_32_VN = 39,
+    PIN_32_D34 = 34,
+    PIN_32_D35 = 35,
+    PIN_32_D32 = 32,
+    PIN_32_D33 = 33
+  } NodeMCU32Pins;
+  
+  NodeMCU32Pins ESP32_ARRAY_PINS[] = {
+    PIN_32_D23, PIN_32_D22, PIN_32_D21, PIN_32_D19, 
+    PIN_32_D18, PIN_32_D5, PIN_32_D4, PIN_32_D2
+  };
+  #define ARRAY_PINS ESP32_ARRAY_PINS
+  #define ARRAY_PINS_SIZE (sizeof(ESP32_ARRAY_PINS)/sizeof(ESP32_ARRAY_PINS[0]))
+#else
+  #error "Plataforma no soportada. Solo ESP8266 y ESP32 son compatibles."
+#endif
 
 
 const int TOTAL_LOG_CALBACKS = 10;
@@ -258,20 +267,20 @@ YaiUtil yaiUtil;
 
 void all_init(){
   /* Init Relay */
-  for (int i = 0; i < sizeof(NODEMCU_ARRAY_PINS)/sizeof(NODEMCU_ARRAY_PINS[0]); i++) {
-    pinMode(NODEMCU_ARRAY_PINS[i], OUTPUT);
+  for (int i = 0; i < ARRAY_PINS_SIZE; i++) {
+    pinMode(ARRAY_PINS[i], OUTPUT);
   }  
 }
 
 void all_off() {
-  for (int i = 0; i < sizeof(NODEMCU_ARRAY_PINS)/sizeof(NODEMCU_ARRAY_PINS[0]); i++) {
-    digitalWrite(NODEMCU_ARRAY_PINS[i], RelayOff);
+  for (int i = 0; i < ARRAY_PINS_SIZE; i++) {
+    digitalWrite(ARRAY_PINS[i], RelayOff);
   }
 }
 
 void all_on() {
-  for (int i = 0; i < sizeof(NODEMCU_ARRAY_PINS)/sizeof(NODEMCU_ARRAY_PINS[0]); i++) {
-    digitalWrite(NODEMCU_ARRAY_PINS[i], RelayOn);
+  for (int i = 0; i < ARRAY_PINS_SIZE; i++) {
+    digitalWrite(ARRAY_PINS[i], RelayOn);
   }
 }
 
@@ -287,7 +296,14 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 			existCMD = true;
 			isBtnActive = true;
 			if(yaiCommand.p1.toInt() > 0){
-				digitalWrite(NODEMCU_ARRAY_PINS[yaiCommand.p1.toInt()-1], RelayOn);
+				int pinIndex = yaiCommand.p1.toInt()-1;
+				int pinNumber = ARRAY_PINS[pinIndex];
+				Serial.print("Activating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber));
+				Serial.print(" -> Before: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH"));
+				digitalWrite(pinNumber, RelayOn);
+				delay(10); // Pequeño delay para asegurar que el cambio se aplique
+				Serial.println(" -> After: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH") + " (Signal sent: " + String(RelayOn == LOW ? "LOW" : "HIGH") + ")");
+				Serial.println("*** RELAY " + String(yaiCommand.p1.toInt()) + " ACTIVATED - GPIO " + String(pinNumber) + " is now " + String(RelayOn == LOW ? "LOW" : "HIGH") + " ***");
 			} else {
 				all_on();
 			}
@@ -297,7 +313,14 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 			isBtnActive = false;
 			Serial.println("POWER OFF");
 			if(yaiCommand.p1.toInt() > 0){
-				digitalWrite(NODEMCU_ARRAY_PINS[yaiCommand.p1.toInt()-1], RelayOff);
+				int pinIndex = yaiCommand.p1.toInt()-1;
+				int pinNumber = ARRAY_PINS[pinIndex];
+				Serial.print("Deactivating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber));
+				Serial.print(" -> Before: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH"));
+				digitalWrite(pinNumber, RelayOff);
+				delay(10); // Pequeño delay para asegurar que el cambio se aplique
+				Serial.println(" -> After: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH") + " (Signal sent: " + String(RelayOff == LOW ? "LOW" : "HIGH") + ")");
+				Serial.println("*** RELAY " + String(yaiCommand.p1.toInt()) + " DEACTIVATED - GPIO " + String(pinNumber) + " is now " + String(RelayOff == LOW ? "LOW" : "HIGH") + " ***");
 			} else {
 				all_off();
 			}

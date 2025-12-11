@@ -44,18 +44,19 @@ void reconnect() {
   // Loop until we're reconnected
   while (!clientMqtt.connected()) {
     Serial.print("Attempting MQTT connection...");
+    Serial.println(" Topics: IN=" + String(MQTT_TOPIC_IN) + " OUT=" + String(MQTT_TOPIC_OUT));
     // Create a random client ID
     String clientId = String(YAI_UID_NAME) + " [NodeMCU-ESP32]";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (clientMqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
-      Serial.println("connected");
+      Serial.println("MQTT connected");
       // Once connected, publish an announcement...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
       // ... and resubscribe
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
-      Serial.print("failed, rc=");
+      Serial.print("MQTT connection failed, rc=");
       Serial.print(clientMqtt.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying

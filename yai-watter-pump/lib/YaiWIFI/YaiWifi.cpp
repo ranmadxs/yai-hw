@@ -132,9 +132,15 @@ void YaiWIFI::startDNSServer(String dnsSsid) {
   dnsServer.start(DNS_PORT, "yairover.ddns.com", apLocalIp);
   Serial.println("DNS Server OK ip:" + apLocalIp.toString() );
   Serial.println("ssid:" + String(apSsid));  
-  if (MDNS.begin("esp8266")) {
-    Serial.println("MDNS responder started");
-  }
+  #if defined(ESP8266)
+    if (MDNS.begin("esp8266")) {
+      Serial.println("MDNS responder started");
+    }
+  #elif defined(ESP32)
+    if (MDNS.begin("esp32")) {
+      Serial.println("MDNS responder started");
+    }
+  #endif
   MDNS.addService("http", "tcp", 80);    
 }
 

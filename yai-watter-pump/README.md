@@ -45,3 +45,5 @@ OFF,0,0,0,0,0,0,0
 # encender sólo el primero
 ON,1,0,0,0,0,0,0
 ```
+## Servidor mqtt de pruebas
+https://www.hivemq.com/demos/websocket-client/
