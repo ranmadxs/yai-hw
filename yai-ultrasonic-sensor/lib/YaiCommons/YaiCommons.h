@@ -213,9 +213,29 @@ public:
 
 YaiUtil yaiUtil;
 
-// Command factory - to be implemented with ultrasonic sensor commands
+// Global variables for ultrasonic sensor control
+extern bool ultrasonicLogsEnabled;
+extern unsigned long ultrasonicMeasurementInterval;
+
+// Command factory - implemented with ultrasonic sensor commands
 void commandFactoryExecute(YaiCommand yaiCommand) {
 	// Commands will be implemented here for ultrasonic sensor
+	if (yaiCommand.command == "ON") {
+		ultrasonicLogsEnabled = true;
+		if (yaiCommand.p1 != "" && yaiCommand.p1 != "NULL") {
+			// Cambiar intervalo si se proporciona (en milisegundos)
+			ultrasonicMeasurementInterval = yaiCommand.p1.toInt();
+		} else {
+			// Usar intervalo por defecto si no se especifica
+			ultrasonicMeasurementInterval = 1500;
+		}
+		Serial.println("Ultrasonic logs enabled, interval: " + String(ultrasonicMeasurementInterval) + "ms");
+	} else if (yaiCommand.command == "OFF") {
+		ultrasonicLogsEnabled = false;
+		Serial.println("Ultrasonic logs disabled");
+	} else {
+		Serial.println("Unknown command: " + yaiCommand.command);
+	}
 }
 
 #endif

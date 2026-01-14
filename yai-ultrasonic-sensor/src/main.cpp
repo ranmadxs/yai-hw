@@ -5,15 +5,21 @@
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
 
-const char* YAI_VERSION="0.0.1-SNAPSHOT";
+const char* YAI_VERSION="0.1.1-SNAPSHOT";
+
+// Device ID estático para el sensor
+const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
+
+// Variables globales para controlar logs del sensor
+bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto
+unsigned long ultrasonicMeasurementInterval = 1500; // Intervalo por defecto (1.5 segundos)
 
 // Definición de pines del sensor ultrasónico
 const int PIN_TRIG = 5;  // Enviar pulso
 const int PIN_ECHO = 18; // Recibir respuesta
-const unsigned long INTERVALO_MEDICION = 500; // 0.5 segundos
 
 // Instancia del sensor ultrasónico
-YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, INTERVALO_MEDICION);
+YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, ultrasonicMeasurementInterval);
 
 void serialController();
 
@@ -21,7 +27,7 @@ void setup() {
   Serial.begin(115200); // opens serial port, sets data rate to 115200 bps
   existCMD = false;
   Serial.println(" ####################################");
-  String yaiServerVersion = " ## yai-ultrasonic-sensor v"+String(YAI_VERSION)+" ##";
+  String yaiServerVersion = " ## yai-ultrasonic-sensor " + DEVICE_ID + " ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ####################################");  
   if (ENABLE_WIFI) { 
