@@ -90,18 +90,18 @@ void YaiUltrasonicSensor::calculateDistance(long duration) {
 }
 
 void YaiUltrasonicSensor::sendDataToMqtt() {
-  if (mqttEnabled && clientMqtt != nullptr && mqttTopic != nullptr && clientMqtt->connected()) {
+  if (mqttEnabled && clientMqtt != nullptr && clientMqtt->connected()) {
     // Formato: DEVICE_ID,ESTADO,DISTANCIA,TIMESTAMP
-    // Ejemplo: YUS-0.0.2-SNAPSHOT,OKO,25.5,12345
+    // Ejemplo: YUS-0.1.0-SNAPSHOT,OKO,25.5,12345
     unsigned long systemTime = millis();
     String mensaje = DEVICE_ID + "," + currentStatus + "," + String(currentDistance, 2) + "," + String(systemTime);
 
-    // Enviamos el mensaje al topic OUT
-    clientMqtt->publish(mqttTopic, mensaje.c_str());
+    // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
+    clientMqtt->publish(DEVICE_MQTT_TOPIC.c_str(), mensaje.c_str());
 
     // Mostramos mensaje MQTT solo si logs están habilitados
     if (ultrasonicLogsEnabled) {
-      Serial.println("MQTT >> " + mensaje);
+      Serial.println("MQTT >> " + mensaje + " (enviado a " + DEVICE_MQTT_TOPIC + ")");
     }
   }
 }

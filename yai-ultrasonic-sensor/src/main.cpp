@@ -5,7 +5,7 @@
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
 
-const char* YAI_VERSION="0.1.1-SNAPSHOT";
+const char* YAI_VERSION="0.2.2-SNAPSHOT";
 
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
@@ -56,6 +56,7 @@ void setup() {
     sensorUltrasonico.setMqttClient(&clientMqtt);
     sensorUltrasonico.setMqttTopic(MQTT_TOPIC_OUT);
   }
+
 }
 
 void loop() {

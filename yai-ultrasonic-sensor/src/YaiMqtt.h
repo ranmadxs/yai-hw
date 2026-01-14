@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 
+// External declarations
+extern const String DEVICE_ID;
+
 //https://www.hivemq.com/public-mqtt-broker/
 /*
 mosquitto_sub -h localhost -p 1883 -t test/topic
@@ -52,6 +55,25 @@ void reconnect() {
       Serial.println("MQTT connected");
       // Once connected, publish an announcement...
       clientMqtt.publish(MQTT_TOPIC_OUT, ("hello world "+clientId).c_str()); //outTopic
+
+      // Publicar información completa de configuración MQTT
+      String deviceTopic = "yai-mqtt/" + DEVICE_ID + "/out";
+      String mqttInfo = "MQTT_CONFIG: Server=" + String(MQTT_SERVER) + ":" + String(MQTT_PORT) +
+                       ", User=" + String(MQTT_USER) +
+                       ", Device=" + DEVICE_ID +
+                       ", Listening=" + String(MQTT_TOPIC_IN) +
+                       ", Responding=" + String(MQTT_TOPIC_OUT) + " and " + deviceTopic +
+                       ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0";
+      clientMqtt.publish(MQTT_TOPIC_OUT, mqttInfo.c_str());
+
+      // Mostrar también por serial
+      Serial.println("MQTT Configuration published:");
+      Serial.println("- Server: " + String(MQTT_SERVER) + ":" + String(MQTT_PORT));
+      Serial.println("- User: " + String(MQTT_USER));
+      Serial.println("- Device: " + DEVICE_ID);
+      Serial.println("- Listening on: " + String(MQTT_TOPIC_IN));
+      Serial.println("- Responding on: " + String(MQTT_TOPIC_OUT) + " and " + deviceTopic);
+
       // ... and resubscribe
       clientMqtt.subscribe(MQTT_TOPIC_IN); //inYaiTopic
     } else {
