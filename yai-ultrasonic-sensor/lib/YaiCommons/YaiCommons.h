@@ -216,10 +216,13 @@ YaiUtil yaiUtil;
 // Global variables for ultrasonic sensor control
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
+extern const String DEVICE_ID;
+extern const String DEVICE_MQTT_TOPIC;
 
 // Command factory - implemented with ultrasonic sensor commands
 void commandFactoryExecute(YaiCommand yaiCommand) {
 	// Commands will be implemented here for ultrasonic sensor
+	String responseMessage;
 	if (yaiCommand.command == "ON") {
 		ultrasonicLogsEnabled = true;
 		if (yaiCommand.p1 != "" && yaiCommand.p1 != "NULL") {
@@ -229,12 +232,30 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 			// Usar intervalo por defecto si no se especifica
 			ultrasonicMeasurementInterval = 1500;
 		}
-		Serial.println("Ultrasonic logs enabled, interval: " + String(ultrasonicMeasurementInterval) + "ms");
+		responseMessage = DEVICE_ID + ",Ultrasonic logs enabled, interval: " + String(ultrasonicMeasurementInterval) + "ms";
+		Serial.println(responseMessage);
+		// Enviar también por MQTT a ambos canales
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
+			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+		}
 	} else if (yaiCommand.command == "OFF") {
 		ultrasonicLogsEnabled = false;
-		Serial.println("Ultrasonic logs disabled");
+		responseMessage = DEVICE_ID + ",Ultrasonic logs disabled";
+		Serial.println(responseMessage);
+		// Enviar también por MQTT a ambos canales
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
+			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+		}
 	} else {
-		Serial.println("Unknown command: " + yaiCommand.command);
+		responseMessage = DEVICE_ID + ",Unknown command: " + yaiCommand.command;
+		Serial.println(responseMessage);
+		// Enviar también por MQTT a ambos canales
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
+			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+		}
 	}
 }
 

@@ -2,6 +2,7 @@
 
 // External declarations
 extern const String DEVICE_ID;
+extern const String DEVICE_MQTT_TOPIC;
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 

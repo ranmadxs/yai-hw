@@ -10,6 +10,9 @@ const char* YAI_VERSION="0.1.1-SNAPSHOT";
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
 
+// Canal MQTT específico del dispositivo
+const String DEVICE_MQTT_TOPIC = "yai-mqtt/" + DEVICE_ID + "/out";
+
 // Variables globales para controlar logs del sensor
 bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto
 unsigned long ultrasonicMeasurementInterval = 1500; // Intervalo por defecto (1.5 segundos)

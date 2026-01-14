@@ -42,32 +42,32 @@ El sensor ultrasónico puede ser controlado mediante comandos enviados por seria
 ```bash
 OFF,0,0,0,0,0,0,0
 ```
-**Respuesta:** `Ultrasonic logs disabled`
+**Respuesta (Serial + MQTT):** `<DEVICE_ID>,Ultrasonic logs disabled`
 
 ### Prender logs con intervalo por defecto (1.5 segundos):
 ```bash
 ON,0,0,0,0,0,0,0
 ```
-**Respuesta:** `Ultrasonic logs enabled, interval: 1500ms`
+**Respuesta (Serial + MQTT):** `<DEVICE_ID>,Ultrasonic logs enabled, interval: 1500ms`
 
 ### Prender logs con intervalo personalizado (ej: 2 segundos):
 ```bash
 ON,2000,0,0,0,0,0,0
 ```
-**Respuesta:** `Ultrasonic logs enabled, interval: 2000ms`
+**Respuesta (Serial + MQTT):** `<DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms`
 
 ### Cambiar intervalo sin apagar logs (ej: 3 segundos):
 ```bash
 ON,3000,0,0,0,0,0,0
 ```
-**Respuesta:** `Ultrasonic logs enabled, interval: 3000ms`
+**Respuesta (Serial + MQTT):** `<DEVICE_ID>,Ultrasonic logs enabled, interval: 3000ms`
 
 ## Salida por Serial
 
 ### Mensaje de inicio:
 ```
  ####################################
- ## yai-ultrasonic-sensor YUS-0.1.0-SNAPSHOT ##
+ ## yai-ultrasonic-sensor <DEVICE_ID> ##
  ####################################
 Iniciando sensor AJ-SR04M...
 WiFi connected to: [SSID]
@@ -78,20 +78,22 @@ MQTT connected
 ### Lecturas del sensor (cuando logs están activados):
 ```
 Distancia: 25.50 cm | Estado: OKO | Tiempo: 12345 ms
-MQTT >> YUS-0.1.0-SNAPSHOT,OKO,25.50,12345
+MQTT >> <DEVICE_ID>,OKO,25.50,12345
 ```
 
 ### Respuestas a comandos:
 ```
-Ultrasonic logs enabled, interval: 2000ms
-Ultrasonic logs disabled
+<DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
+<DEVICE_ID>,Ultrasonic logs disabled
+<DEVICE_ID>,Unknown command: INVALID
 ```
 
 ## MQTT Topics
 
 ### Tópicos de comunicación:
 - **IN**: `yai-mqtt/in` - Para comandos entrantes (control del sensor)
-- **OUT**: `yai-mqtt/out` - Para mensajes salientes del sensor (datos de distancia)
+- **OUT General**: `yai-mqtt/out` - Para mensajes salientes del sensor (datos de distancia)
+- **OUT Específico**: `yai-mqtt/<DEVICE_ID>/out` - Canal dedicado a este dispositivo
 
 ### Servidor MQTT por defecto:
 - **Host**: `broker.mqttdashboard.com`
@@ -101,16 +103,34 @@ Ultrasonic logs disabled
 ## Formato de Mensajes MQTT
 
 ### Mensajes salientes (sensor → MQTT OUT):
-Los datos del sensor se envían automáticamente en formato CSV:
+
+Los mensajes se publican en **canales específicos según el tipo**:
+
+#### Datos del sensor:
+Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
+- `yai-mqtt/<DEVICE_ID>/out` - Canal específico del dispositivo
+
+**Formato:**
 ```
-YUS-0.1.0-SNAPSHOT,OKO,25.50,12345
+<DEVICE_ID>,OKO,25.50,12345
 ```
 
 **Campos:**
-- `YUS-0.1.0-SNAPSHOT`: ID único del dispositivo (YUS = Ultrasonic Sensor + versión)
+- `<DEVICE_ID>`: ID único del dispositivo (YUS = Ultrasonic Sensor + versión)
 - `OKO`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `25.50`: Distancia medida en centímetros (2 decimales)
 - `12345`: Timestamp del sistema en milisegundos
+
+#### Respuestas a comandos:
+Las respuestas a comandos de control se envían a **AMBOS canales**:
+- `yai-mqtt/out` - Canal general compartido
+- `yai-mqtt/<DEVICE_ID>/out` - Canal específico del dispositivo
+
+**Formatos:**
+```
+<DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
+<DEVICE_ID>,Ultrasonic logs disabled
+```
 
 ### Mensajes entrantes (MQTT IN → sensor):
 Los comandos de control se reciben en el mismo formato CSV:
@@ -138,6 +158,53 @@ ON,2000,0,0,0,0,0,0
    ```bash
    mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
    ```
+
+### Ejemplo de conversación MQTT:
+
+1. **Enviar comando para activar logs:**
+   ```bash
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "ON,2000,0,0,0,0,0,0"
+   ```
+
+2. **Recibir respuesta (en ambos canales):**
+   ```
+   yai-mqtt/out: <DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
+   ```
+
+3. **Recibir datos del sensor cada 2 segundos (solo canal específico):**
+   ```
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.50,12345
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,14345
+   ```
+
+4. **Enviar comando para desactivar logs:**
+   ```bash
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "OFF,0,0,0,0,0,0,0"
+   ```
+
+5. **Recibir respuesta de confirmación (en ambos canales):**
+   ```
+   yai-mqtt/out: <DEVICE_ID>,Ultrasonic logs disabled
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,Ultrasonic logs disabled
+   ```
+
+### Suscripción a canales específicos:
+
+**Suscribirse solo al canal general:**
+```bash
+mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
+```
+
+**Suscribirse solo al canal específico del dispositivo:**
+```bash
+mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/out"
+```
+
+**Suscribirse a todos los canales del dispositivo:**
+```bash
+mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/#"
+```
 
 ## Herramientas de Prueba MQTT
 
