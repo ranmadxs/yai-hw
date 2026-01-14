@@ -5,7 +5,7 @@
 #include "YaiMqtt.h"
 
 
-const char* YAI_VERSION="0.6.4-SNAPSHOT";
+const char* YAI_VERSION="0.6.5-SNAPSHOT";
 // WiFiClient espClient;
 
 void serialController();

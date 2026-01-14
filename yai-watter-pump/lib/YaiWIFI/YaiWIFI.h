@@ -60,8 +60,8 @@ class YaiWIFI {
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
       { "YaiCosta", "1101000000" },
-      { "Patitas-EXT", "21193120" },
       { "Patitas", "21193120" },
+      { "Patitas-EXT", "21193120" },
       { "YAI_LUA", "1101000000" },
       { "VTR-YAI-5Ghz", "Pana8bc1108" } };
 

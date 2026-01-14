@@ -109,6 +109,13 @@ void mqttCallback(String msg) {
   clientMqtt.publish(MQTT_TOPIC_OUT, msg.c_str());
 }
 
+void logToMqtt(String message) {
+  Serial.println(message);
+  if (ENABLE_MQTT && clientMqtt.connected()) {
+    clientMqtt.publish(MQTT_TOPIC_OUT, message.c_str());
+  }
+}
+
 class LogAppender {
   public:
     ~LogAppender(){}
@@ -287,23 +294,30 @@ void all_on() {
 // TODO: Arreglar el ON y el OFF para que funcione con el nuevo array de pines
 void commandFactoryExecute(YaiCommand yaiCommand) {
 	YaiCommand yaiResCmd;
-  	Serial.print("<< ");  //-> Esto se transforma en log debug
-	Serial.println(yaiCommand.toString());
+  	String logMsg = "<< " + yaiCommand.toString();
+	Serial.println(logMsg);
+	if (ENABLE_MQTT && clientMqtt.connected()) {
+		clientMqtt.publish(MQTT_TOPIC_OUT, logMsg.c_str());
+	}
+	
 	if (yaiCommand.execute) {
     	existCMD = false;
 		if (yaiCommand.command == "ON") {
-			Serial.println("POWER ON");
+			logToMqtt("POWER ON");
 			existCMD = true;
 			isBtnActive = true;
 			if(yaiCommand.p1.toInt() > 0){
 				int pinIndex = yaiCommand.p1.toInt()-1;
 				int pinNumber = ARRAY_PINS[pinIndex];
-				Serial.print("Activating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber));
-				Serial.print(" -> Before: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH"));
+				String beforeState = String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH");
 				digitalWrite(pinNumber, RelayOn);
 				delay(10); // Pequeño delay para asegurar que el cambio se aplique
-				Serial.println(" -> After: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH") + " (Signal sent: " + String(RelayOn == LOW ? "LOW" : "HIGH") + ")");
-				Serial.println("*** RELAY " + String(yaiCommand.p1.toInt()) + " ACTIVATED - GPIO " + String(pinNumber) + " is now " + String(RelayOn == LOW ? "LOW" : "HIGH") + " ***");
+				String afterState = String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH");
+				String signalSent = String(RelayOn == LOW ? "LOW" : "HIGH");
+				String logMsg1 = "Activating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber) + " -> Before: " + beforeState + " -> After: " + afterState + " (Signal sent: " + signalSent + ")";
+				logToMqtt(logMsg1);
+				String logMsg2 = "*** RELAY " + String(yaiCommand.p1.toInt()) + " ACTIVATED - GPIO " + String(pinNumber) + " is now " + signalSent + " ***";
+				logToMqtt(logMsg2);
 			} else {
 				all_on();
 			}
@@ -311,16 +325,19 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		if (yaiCommand.command == "OFF") {
 			existCMD = true;
 			isBtnActive = false;
-			Serial.println("POWER OFF");
+			logToMqtt("POWER OFF");
 			if(yaiCommand.p1.toInt() > 0){
 				int pinIndex = yaiCommand.p1.toInt()-1;
 				int pinNumber = ARRAY_PINS[pinIndex];
-				Serial.print("Deactivating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber));
-				Serial.print(" -> Before: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH"));
+				String beforeState = String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH");
 				digitalWrite(pinNumber, RelayOff);
 				delay(10); // Pequeño delay para asegurar que el cambio se aplique
-				Serial.println(" -> After: " + String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH") + " (Signal sent: " + String(RelayOff == LOW ? "LOW" : "HIGH") + ")");
-				Serial.println("*** RELAY " + String(yaiCommand.p1.toInt()) + " DEACTIVATED - GPIO " + String(pinNumber) + " is now " + String(RelayOff == LOW ? "LOW" : "HIGH") + " ***");
+				String afterState = String(digitalRead(pinNumber) == LOW ? "LOW" : "HIGH");
+				String signalSent = String(RelayOff == LOW ? "LOW" : "HIGH");
+				String logMsg1 = "Deactivating relay " + String(yaiCommand.p1.toInt()) + " -> Pin index: " + String(pinIndex) + " -> GPIO: " + String(pinNumber) + " -> Before: " + beforeState + " -> After: " + afterState + " (Signal sent: " + signalSent + ")";
+				logToMqtt(logMsg1);
+				String logMsg2 = "*** RELAY " + String(yaiCommand.p1.toInt()) + " DEACTIVATED - GPIO " + String(pinNumber) + " is now " + signalSent + " ***";
+				logToMqtt(logMsg2);
 			} else {
 				all_off();
 			}
@@ -329,10 +346,10 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		yaiCommand.error = yaiCommand.command + " command not found";
 		}		
 	} else {
-		Serial.println("[WARN] Not execute command " + yaiCommand.command);
+		logToMqtt("[WARN] Not execute command " + yaiCommand.command);
 	} 
   if( yaiCommand.error.length() > 1 ) {
-    Serial.println("[ERROR] " + yaiCommand.error);
+    logToMqtt("[ERROR] " + yaiCommand.error);
   }
 }
 
