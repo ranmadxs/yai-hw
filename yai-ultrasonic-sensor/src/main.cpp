@@ -3,9 +3,17 @@
 #include "YaiWIFI.h"
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
-
+#include "YaiUltrasonicSensor.h"
 
 const char* YAI_VERSION="0.0.1-SNAPSHOT";
+
+// Definición de pines del sensor ultrasónico
+const int PIN_TRIG = 5;  // Enviar pulso
+const int PIN_ECHO = 18; // Recibir respuesta
+const unsigned long INTERVALO_MEDICION = 500; // 0.5 segundos
+
+// Instancia del sensor ultrasónico
+YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, INTERVALO_MEDICION);
 
 void serialController();
 
@@ -30,6 +38,15 @@ void setup() {
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
     clientMqtt.setCallback(callbackMqtt);
   }
+  
+  // Inicializamos el sensor ultrasónico
+  sensorUltrasonico.begin();
+  
+  // Configuramos MQTT para el sensor si está habilitado
+  if (ENABLE_MQTT) {
+    sensorUltrasonico.setMqttClient(&clientMqtt);
+    sensorUltrasonico.setMqttTopic(MQTT_TOPIC_OUT);
+  }
 }
 
 void loop() {
@@ -41,6 +58,9 @@ void loop() {
     }
     clientMqtt.loop();
   }
+  
+  // Loop del sensor ultrasónico (maneja lectura y envío MQTT)
+  sensorUltrasonico.loop();
 }
 
 void serialController() {
