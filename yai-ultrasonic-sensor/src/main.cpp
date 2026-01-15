@@ -5,13 +5,14 @@
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
 
-const char* YAI_VERSION="0.2.2-SNAPSHOT";
+const char* YAI_VERSION="0.2.7-SNAPSHOT";
 
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
 
-// Canal MQTT específico del dispositivo
-const String DEVICE_MQTT_TOPIC = "yai-mqtt/" + DEVICE_ID + "/out";
+// Canales MQTT específicos del dispositivo
+const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + DEVICE_ID + "/out";
+const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + DEVICE_ID + "/in";
 
 // Variables globales para controlar logs del sensor
 bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto
@@ -55,6 +56,24 @@ void setup() {
   if (ENABLE_MQTT) {
     sensorUltrasonico.setMqttClient(&clientMqtt);
     sensorUltrasonico.setMqttTopic(MQTT_TOPIC_OUT);
+
+    // Publicar información de configuración MQTT al iniciar
+    String mqttInfo = "MQTT_CONFIG: Server=" + String(MQTT_SERVER) + ":" + String(MQTT_PORT) +
+                     ", User=" + String(MQTT_USER) +
+                     ", Device=" + DEVICE_ID +
+                     ", Listening=" + String(MQTT_TOPIC_IN) + " and " + DEVICE_MQTT_TOPIC_IN +
+                     ", Responding=" + String(MQTT_TOPIC_OUT) + " and " + DEVICE_MQTT_TOPIC_OUT +
+                     ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0 | PING->PONG";
+
+    if (clientMqtt.connected()) {
+      clientMqtt.publish(MQTT_TOPIC_OUT, mqttInfo.c_str());
+      Serial.println("MQTT Configuration published on startup:");
+      Serial.println("- Server: " + String(MQTT_SERVER) + ":" + String(MQTT_PORT));
+      Serial.println("- User: " + String(MQTT_USER));
+      Serial.println("- Device: " + DEVICE_ID);
+      Serial.println("- Listening on: " + String(MQTT_TOPIC_IN) + " and " + DEVICE_MQTT_TOPIC_IN);
+      Serial.println("- Responding on: " + String(MQTT_TOPIC_OUT) + " and " + DEVICE_MQTT_TOPIC_OUT);
+    }
   }
 
 }

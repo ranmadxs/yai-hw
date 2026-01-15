@@ -217,7 +217,8 @@ YaiUtil yaiUtil;
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 extern const String DEVICE_ID;
-extern const String DEVICE_MQTT_TOPIC;
+extern const String DEVICE_MQTT_TOPIC_OUT;
+extern const String DEVICE_MQTT_TOPIC_IN;
 
 // Command factory - implemented with ultrasonic sensor commands
 void commandFactoryExecute(YaiCommand yaiCommand) {
@@ -237,7 +238,7 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		// Enviar también por MQTT a ambos canales
 		if (ENABLE_MQTT && clientMqtt.connected()) {
 			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
-			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
 		}
 	} else if (yaiCommand.command == "OFF") {
 		ultrasonicLogsEnabled = false;
@@ -246,7 +247,7 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		// Enviar también por MQTT a ambos canales
 		if (ENABLE_MQTT && clientMqtt.connected()) {
 			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
-			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
 		}
 	} else {
 		responseMessage = DEVICE_ID + ",Unknown command: " + yaiCommand.command;
@@ -254,10 +255,11 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		// Enviar también por MQTT a ambos canales
 		if (ENABLE_MQTT && clientMqtt.connected()) {
 			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
-			clientMqtt.publish(DEVICE_MQTT_TOPIC.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
 		}
 	}
 }
+
 
 #endif
 

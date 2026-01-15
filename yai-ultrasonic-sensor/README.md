@@ -56,6 +56,12 @@ ON,2000,0,0,0,0,0,0
 ```
 **Respuesta (Serial + MQTT):** `<DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms`
 
+### Comando PING/PONG (verificación de conectividad):
+```bash
+PING
+```
+**Respuesta (solo MQTT):** `PONG,<DEVICE_ID>,IP:<ip_address>,IN:<input_topic>,OUT:<output_topic>,DEVICE_OUT:<device_output_topic>,SERVER:<server>:<port>`
+
 ### Cambiar intervalo sin apagar logs (ej: 3 segundos):
 ```bash
 ON,3000,0,0,0,0,0,0
@@ -91,9 +97,10 @@ MQTT >> <DEVICE_ID>,OKO,25.50,12345
 ## MQTT Topics
 
 ### Tópicos de comunicación:
-- **IN**: `yai-mqtt/in` - Para comandos entrantes (control del sensor)
-- **OUT General**: `yai-mqtt/out` - Para mensajes salientes del sensor (datos de distancia)
-- **OUT Específico**: `yai-mqtt/<DEVICE_ID>/out` - Canal dedicado a este dispositivo
+- **IN General**: `yai-mqtt/in` - Solo para comando PING (verificación de conectividad)
+- **IN Específico**: `yai-mqtt/<DEVICE_ID>/in` - Para comandos ON/OFF (control del sensor)
+- **OUT General**: `yai-mqtt/out` - Para respuestas a comandos y PONG
+- **OUT Específico**: `yai-mqtt/<DEVICE_ID>/out` - Para datos del sensor
 
 ### Servidor MQTT por defecto:
 - **Host**: `broker.mqttdashboard.com`
@@ -161,9 +168,9 @@ ON,2000,0,0,0,0,0,0
 
 ### Ejemplo de conversación MQTT:
 
-1. **Enviar comando para activar logs:**
+1. **Enviar comando para activar logs (canal específico):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "ON,2000,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "ON,2000,0,0,0,0,0,0"
    ```
 
 2. **Recibir respuesta (en ambos canales):**
@@ -178,16 +185,46 @@ ON,2000,0,0,0,0,0,0
    yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,14345
    ```
 
-4. **Enviar comando para desactivar logs:**
+4. **Enviar comando para verificar conectividad (canal general):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "OFF,0,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
    ```
 
-5. **Recibir respuesta de confirmación (en ambos canales):**
+5. **Recibir respuesta PONG (solo canal general):**
+   ```
+   yai-mqtt/out: PONG,<DEVICE_ID>,IP:192.168.1.100,IN:yai-mqtt/in,OUT:yai-mqtt/out,DEVICE_IN:yai-mqtt/<DEVICE_ID>/in,DEVICE_OUT:yai-mqtt/<DEVICE_ID>/out,SERVER:broker.mqttdashboard.com:1883
+   ```
+
+6. **Enviar comando para desactivar logs (canal específico):**
+   ```bash
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+   ```
+
+7. **Recibir respuesta de confirmación (en ambos canales):**
    ```
    yai-mqtt/out: <DEVICE_ID>,Ultrasonic logs disabled
    yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,Ultrasonic logs disabled
    ```
+
+### Ejemplos de comandos usando canales específicos:
+
+**Enviar comando ON (solo funciona en canal específico):**
+```bash
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+```
+
+**Enviar comando OFF (solo funciona en canal específico):**
+```bash
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+```
+
+**Enviar PING (solo funciona en canal general):**
+```bash
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
+```
+
+**Nota:** Los comandos ON/OFF serán ignorados si se envían al canal general (`yai-mqtt/in`).
+El comando PING será ignorado si se envía al canal específico (`yai-mqtt/<DEVICE_ID>/in`).
 
 ### Suscripción a canales específicos:
 

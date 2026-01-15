@@ -14,6 +14,8 @@
 
 // Device ID constant (will be defined externally in main.cpp)
 extern const String DEVICE_ID;
+extern const String DEVICE_MQTT_TOPIC_OUT;
+extern const String DEVICE_MQTT_TOPIC_IN;
 
 // Global control variables
 extern bool ultrasonicLogsEnabled;

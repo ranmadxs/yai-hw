@@ -2,7 +2,7 @@
 
 // External declarations
 extern const String DEVICE_ID;
-extern const String DEVICE_MQTT_TOPIC;
+extern const String DEVICE_MQTT_TOPIC_OUT;
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 
@@ -97,11 +97,11 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
     String mensaje = DEVICE_ID + "," + currentStatus + "," + String(currentDistance, 2) + "," + String(systemTime);
 
     // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
-    clientMqtt->publish(DEVICE_MQTT_TOPIC.c_str(), mensaje.c_str());
+    clientMqtt->publish(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje.c_str());
 
     // Mostramos mensaje MQTT solo si logs están habilitados
     if (ultrasonicLogsEnabled) {
-      Serial.println("MQTT >> " + mensaje + " (enviado a " + DEVICE_MQTT_TOPIC + ")");
+      Serial.println("MQTT >> " + mensaje + " (enviado a " + DEVICE_MQTT_TOPIC_OUT + ")");
     }
   }
 }
