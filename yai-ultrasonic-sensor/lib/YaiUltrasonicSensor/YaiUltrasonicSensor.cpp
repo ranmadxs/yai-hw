@@ -92,9 +92,9 @@ void YaiUltrasonicSensor::calculateDistance(long duration) {
 void YaiUltrasonicSensor::sendDataToMqtt() {
   if (mqttEnabled && clientMqtt != nullptr && clientMqtt->connected()) {
     // Formato: DEVICE_ID,ESTADO,DISTANCIA,TIMESTAMP
-    // Ejemplo: YUS-0.1.0-SNAPSHOT,OKO,25.5,12345
-    unsigned long systemTime = millis();
-    String mensaje = DEVICE_ID + "," + currentStatus + "," + String(currentDistance, 2) + "," + String(systemTime);
+    // Ejemplo: YUS-0.2.7-RC-COSTA,OKO,25.5,2024-01-15 14:30:25
+    String timestamp = getCurrentTimestamp();
+    String mensaje = DEVICE_ID + "," + currentStatus + "," + String(currentDistance, 2) + "," + timestamp;
 
     // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
     clientMqtt->publish(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje.c_str());

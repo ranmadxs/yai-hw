@@ -83,8 +83,8 @@ MQTT connected
 
 ### Lecturas del sensor (cuando logs están activados):
 ```
-Distancia: 25.50 cm | Estado: OKO | Tiempo: 12345 ms
-MQTT >> <DEVICE_ID>,OKO,25.50,12345
+Distancia: 25.50 cm | Estado: OKO | Tiempo: 2024-01-15 14:30:25
+MQTT >> <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 ```
 
 ### Respuestas a comandos:
@@ -119,14 +119,14 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 
 **Formato:**
 ```
-<DEVICE_ID>,OKO,25.50,12345
+<DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 ```
 
 **Campos:**
 - `<DEVICE_ID>`: ID único del dispositivo (YUS = Ultrasonic Sensor + versión)
 - `OKO`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `25.50`: Distancia medida en centímetros (2 decimales)
-- `12345`: Timestamp del sistema en milisegundos
+- `2024-01-15 14:30:25`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
 
 #### Respuestas a comandos:
 Las respuestas a comandos de control se envían a **AMBOS canales**:
@@ -181,8 +181,8 @@ ON,2000,0,0,0,0,0,0
 
 3. **Recibir datos del sensor cada 2 segundos (solo canal específico):**
    ```
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.50,12345
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,14345
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
+   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,2024-01-15 14:30:27
    ```
 
 4. **Enviar comando para verificar conectividad (canal general):**

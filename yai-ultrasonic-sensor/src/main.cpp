@@ -4,8 +4,10 @@
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
-const char* YAI_VERSION="0.2.7-SNAPSHOT";
+const char* YAI_VERSION="0.2.7-RC-COSTA";
 
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
@@ -25,6 +27,27 @@ const int PIN_ECHO = 18; // Recibir respuesta
 // Instancia del sensor ultrasónico
 YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, ultrasonicMeasurementInterval);
 
+// Cliente NTP para obtener la hora actual
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", -3 * 3600, 60000); // UTC-3 (Argentina), actualizar cada 60 segundos
+
+// Función para obtener timestamp formateado (NTP si conectado, millis si no)
+String getCurrentTimestamp() {
+  if (ENABLE_WIFI && WiFi.status() == WL_CONNECTED) {
+    // Usar NTP si WiFi está conectado
+    time_t epochTime = timeClient.getEpochTime();
+    struct tm *ptm = gmtime(&epochTime);
+    char timestamp[20];
+    sprintf(timestamp, "%04d-%02d-%02d %02d:%02d:%02d",
+            ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday,
+            ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    return String(timestamp);
+  } else {
+    // Usar millis si no hay WiFi
+    return String(millis());
+  }
+}
+
 void serialController();
 
 void setup() {
@@ -38,11 +61,17 @@ void setup() {
     Serial.println(" ######### Wifi Client ##########");
     yaiWifi.connect();
   }
-  if (ENABLE_WIFI) { 
+  if (ENABLE_WIFI) {
     Serial.println(" ######### DNS Server ###########");
     String dnsName = "YAI_SRV_ULTRASONIC";
     Serial.println(dnsName);
     yaiWifi.startDNSServer(dnsName);
+
+    // Inicializar NTP Client
+    Serial.println(" ######### NTP Client ###########");
+    timeClient.begin();
+    timeClient.update();
+    Serial.println("NTP initialized");
   }
   if (ENABLE_MQTT) { 
     clientMqtt.setServer(MQTT_SERVER, MQTT_PORT);
@@ -80,6 +109,11 @@ void setup() {
 
 void loop() {
   serialController();
+
+  // Actualizar NTP si WiFi está habilitado
+  if (ENABLE_WIFI) {
+    timeClient.update();
+  }
 
   if (ENABLE_MQTT) { 
     if (!clientMqtt.connected()) {

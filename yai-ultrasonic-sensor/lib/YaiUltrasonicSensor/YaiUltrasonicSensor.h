@@ -21,6 +21,9 @@ extern const String DEVICE_MQTT_TOPIC_IN;
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 
+// Función para obtener timestamp formateado
+extern String getCurrentTimestamp();
+
 // Constantes para cálculos
 // Velocidad del sonido en el aire aprox 0.0343 cm/microsegundo
 const float VELOCIDAD_SONIDO = 0.0343;
