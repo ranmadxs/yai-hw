@@ -13,7 +13,7 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.1-COSTA";
+const char* YAI_VERSION="0.3.3-COSTA";
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -30,6 +30,9 @@ String getChipShortId() {
 #endif
   return String(id);
 }
+
+// Profundidad del tanque en cm (por ejemplo 1.60 m = 160 cm)
+extern const float TANK_DEPTH_CM = 160.0;
 
 // Identificador de canal MQTT basado en el chip (ej: 1A2B3C4D), longitud máx. 8
 const String CHANNEL_ID = getChipShortId();

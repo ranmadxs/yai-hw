@@ -80,6 +80,9 @@ void YaiUltrasonicSensor::readSensor() {
 static const float DISTANCIA_MIN_CM = 2.0;
 static const float DISTANCIA_MAX_CM = 400.0;
 
+// Profundidad del tanque en cm definida en main.cpp
+extern const float TANK_DEPTH_CM;
+
 void YaiUltrasonicSensor::calculateDistance(long duration) {
   // Distancia = (Tiempo * Velocidad) / 2 (porque el sonido va y vuelve)
   currentDistance = (duration * VELOCIDAD_SONIDO) / 2;
@@ -94,10 +97,50 @@ void YaiUltrasonicSensor::calculateDistance(long duration) {
 
 void YaiUltrasonicSensor::sendDataToMqtt() {
   if (mqttEnabled && clientMqtt != nullptr && clientMqtt->connected()) {
-    // Formato: DEVICE_ID,ESTADO,DISTANCIA,TIMESTAMP
-    // Ejemplo: YUS-0.2.7-RC-COSTA,OKO,25.5,2024-01-15 14:30:25
+    // Formato JSON para datos del sensor:
+    // {
+    //   "deviceId": "...",
+    //   "status": "OKO" | "NOK",
+    //   "distanceCm": 25.50,
+    //   "timestamp": "2024-01-15 14:30:25",
+    //   "tankDepthCm": 160.0,
+    //   "remainingToFullCm": 134.50,
+    //   "fillLevelPercent": 84.06
+    // }
     String timestamp = getCurrentTimestamp();
-    String mensaje = DEVICE_ID + "," + currentStatus + "," + String(currentDistance, 2) + "," + timestamp;
+
+    float distance = currentDistance;
+    if (distance < 0) {
+      distance = 0;
+    }
+    // Altura de líquido = profundidad - distancia medida desde el sensor al líquido
+    float filledHeightCm = TANK_DEPTH_CM - distance;
+    if (filledHeightCm < 0) {
+      filledHeightCm = 0;
+    }
+    if (filledHeightCm > TANK_DEPTH_CM) {
+      filledHeightCm = TANK_DEPTH_CM;
+    }
+
+    float remainingToFullCm = TANK_DEPTH_CM - filledHeightCm;
+    if (remainingToFullCm < 0) {
+      remainingToFullCm = 0;
+    }
+
+    float fillLevelPercent = 0.0;
+    if (TANK_DEPTH_CM > 0) {
+      fillLevelPercent = (filledHeightCm / TANK_DEPTH_CM) * 100.0;
+    }
+
+    String mensaje = "{";
+    mensaje += "\"deviceId\":\"" + DEVICE_ID + "\"";
+    mensaje += ",\"status\":\"" + currentStatus + "\"";
+    mensaje += ",\"distanceCm\":" + String(distance, 2);
+    mensaje += ",\"timestamp\":\"" + timestamp + "\"";
+    mensaje += ",\"tankDepthCm\":" + String(TANK_DEPTH_CM, 2);
+    mensaje += ",\"remainingToFullCm\":" + String(remainingToFullCm, 2);
+    mensaje += ",\"fillLevelPercent\":" + String(fillLevelPercent, 2);
+    mensaje += "}";
 
     // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
     clientMqtt->publish(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje.c_str());

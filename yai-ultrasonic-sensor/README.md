@@ -124,16 +124,27 @@ Los mensajes se publican en **canales específicos según el tipo**:
 Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 - `yai-mqtt/<CHANNEL_ID>/out` - Canal específico del dispositivo
 
-**Formato:**
-```
-<DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
+**Formato (JSON):**
+```json
+{
+  "deviceId": "YUS-0.3.1-COSTA",
+  "status": "OKO",
+  "distanceCm": 25.50,
+  "timestamp": "2024-01-15 14:30:25",
+  "tankDepthCm": 160.0,
+  "remainingToFullCm": 134.50,
+  "fillLevelPercent": 84.06
+}
 ```
 
 **Campos:**
-- `<DEVICE_ID>`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.0-COSTA`)
-- `OKO`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
-- `25.50`: Distancia medida en centímetros (2 decimales)
-- `2024-01-15 14:30:25`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
+- `deviceId`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.1-COSTA`)
+- `status`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
+- `distanceCm`: Distancia medida por el sensor en centímetros (2 decimales)
+- `timestamp`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
+- `tankDepthCm`: Profundidad total considerada del tanque en centímetros (ej: 160.0 = 1.60 m)
+- `remainingToFullCm`: Cuánto le falta para llenarse en centímetros (0 = lleno, profundidad completa)
+- `fillLevelPercent`: Nivel de llenado en porcentaje (0–100)
 
 #### Respuestas a comandos:
 Las respuestas a comandos de control se envían a **AMBOS canales**:
