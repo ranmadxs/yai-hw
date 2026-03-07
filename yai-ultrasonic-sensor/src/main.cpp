@@ -7,7 +7,7 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
-const char* YAI_VERSION="0.2.7-RC-COSTA";
+const char* YAI_VERSION="0.2.8-COSTA";
 
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);

@@ -76,13 +76,16 @@ void YaiUltrasonicSensor::readSensor() {
   }
 }
 
+// Rango útil del sensor AJ-SR04M: 2-400 cm (por debajo de 2 cm = ruido o cable desconectado)
+static const float DISTANCIA_MIN_CM = 2.0;
+static const float DISTANCIA_MAX_CM = 400.0;
+
 void YaiUltrasonicSensor::calculateDistance(long duration) {
   // Distancia = (Tiempo * Velocidad) / 2 (porque el sonido va y vuelve)
   currentDistance = (duration * VELOCIDAD_SONIDO) / 2;
   
-  // Determinamos el estado del sensor
-  if (duration == 0 || currentDistance <= 0 || currentDistance > 400) {
-    // Rango típico del sensor es 2-400 cm
+  // duration==0 → timeout (sin eco). Fuera de 2-400 cm → inválido (ruido, cable suelto, o fuera de rango)
+  if (duration == 0 || currentDistance < DISTANCIA_MIN_CM || currentDistance > DISTANCIA_MAX_CM) {
     currentStatus = String(STATUS_NOK);
   } else {
     currentStatus = String(STATUS_OK);
