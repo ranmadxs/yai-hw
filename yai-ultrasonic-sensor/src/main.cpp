@@ -7,7 +7,7 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
-const char* YAI_VERSION="0.2.8-COSTA";
+const char* YAI_VERSION="0.3.0-COSTA";
 
 // Device ID estático para el sensor
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
@@ -92,7 +92,7 @@ void setup() {
                      ", Device=" + DEVICE_ID +
                      ", Listening=" + String(MQTT_TOPIC_IN) + " and " + DEVICE_MQTT_TOPIC_IN +
                      ", Responding=" + String(MQTT_TOPIC_OUT) + " and " + DEVICE_MQTT_TOPIC_OUT +
-                     ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0 | PING->PONG";
+                     ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0 | PING->PONG | HELP->ayuda";
 
     if (clientMqtt.connected()) {
       clientMqtt.publish(MQTT_TOPIC_OUT, mqttInfo.c_str());

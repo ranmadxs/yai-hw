@@ -62,6 +62,13 @@ PING
 ```
 **Respuesta (solo MQTT):** `PONG,<DEVICE_ID>,IP:<ip_address>,IN:<input_topic>,OUT:<output_topic>,DEVICE_OUT:<device_output_topic>,SERVER:<server>:<port>`
 
+### Comando HELP (ayuda de uso):
+```bash
+HELP
+```
+**Dónde:** mismo listener que PING → publicar en `yai-mqtt/in`  
+**Respuesta (solo MQTT):** se publica en el mismo canal que PONG (`yai-mqtt/out`) un mensaje de ayuda con emojis y formato tipo Slack (comandos, canales, formato de lecturas).
+
 ### Cambiar intervalo sin apagar logs (ej: 3 segundos):
 ```bash
 ON,3000,0,0,0,0,0,0
@@ -97,9 +104,9 @@ MQTT >> <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 ## MQTT Topics
 
 ### Tópicos de comunicación:
-- **IN General**: `yai-mqtt/in` - Solo para comando PING (verificación de conectividad)
+- **IN General**: `yai-mqtt/in` - Comandos PING (conectividad) y HELP (ayuda de uso)
 - **IN Específico**: `yai-mqtt/<DEVICE_ID>/in` - Para comandos ON/OFF (control del sensor)
-- **OUT General**: `yai-mqtt/out` - Para respuestas a comandos y PONG
+- **OUT General**: `yai-mqtt/out` - Respuestas a comandos, PONG y HELP
 - **OUT Específico**: `yai-mqtt/<DEVICE_ID>/out` - Para datos del sensor
 
 ### Servidor MQTT por defecto:
@@ -185,12 +192,13 @@ ON,2000,0,0,0,0,0,0
    yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,2024-01-15 14:30:27
    ```
 
-4. **Enviar comando para verificar conectividad (canal general):**
+4. **Enviar comando para verificar conectividad o ayuda (canal general):**
    ```bash
    mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "HELP"
    ```
 
-5. **Recibir respuesta PONG (solo canal general):**
+5. **Recibir respuesta PONG o HELP (canal general `yai-mqtt/out`):**
    ```
    yai-mqtt/out: PONG,<DEVICE_ID>,IP:192.168.1.100,IN:yai-mqtt/in,OUT:yai-mqtt/out,DEVICE_IN:yai-mqtt/<DEVICE_ID>/in,DEVICE_OUT:yai-mqtt/<DEVICE_ID>/out,SERVER:broker.mqttdashboard.com:1883
    ```
@@ -218,13 +226,14 @@ mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "ON,20
 mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "OFF,0,0,0,0,0,0,0"
 ```
 
-**Enviar PING (solo funciona en canal general):**
+**Enviar PING o HELP (solo en canal general):**
 ```bash
 mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "HELP"
 ```
 
 **Nota:** Los comandos ON/OFF serán ignorados si se envían al canal general (`yai-mqtt/in`).
-El comando PING será ignorado si se envía al canal específico (`yai-mqtt/<DEVICE_ID>/in`).
+Los comandos PING y HELP serán ignorados si se envían al canal específico (`yai-mqtt/<DEVICE_ID>/in`).
 
 ### Suscripción a canales específicos:
 

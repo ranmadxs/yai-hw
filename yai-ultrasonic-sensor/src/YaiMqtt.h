@@ -28,15 +28,12 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
   bool isGeneralChannel = (topicStr == String(MQTT_TOPIC_IN));
   bool isSpecificChannel = (topicStr == DEVICE_MQTT_TOPIC_IN);
 
-  // Verificar si es un comando PING
-  if (msgPayload == "PING") {
-    // PING solo se acepta en el canal GENERAL
-    if (isGeneralChannel) {
+  // Comandos solo en canal GENERAL (mismo que PING): PING y HELP
+  if (isGeneralChannel && (msgPayload == "PING" || msgPayload == "HELP")) {
+    if (msgPayload == "PING") {
       Serial.println("PING received on general channel - sending PONG");
-      // Obtener información del sistema
       extern const String DEVICE_MQTT_TOPIC_OUT;
       extern const String DEVICE_MQTT_TOPIC_IN;
-      extern const String DEVICE_MQTT_TOPIC_OUT;
       String pongResponse = "PONG," + DEVICE_ID +
                          ",IP:" + yaiWifi.getIp() +
                          ",IN:" + String(MQTT_TOPIC_IN) +
@@ -46,8 +43,28 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
                          ",SERVER:" + String(MQTT_SERVER) + ":" + String(MQTT_PORT);
       clientMqtt.publish(MQTT_TOPIC_OUT, pongResponse.c_str());
     } else {
-      Serial.println("PING ignored - only accepted on general channel");
+      // HELP - respuesta estilo Slack (emojis, secciones) en el mismo canal que PONG
+      Serial.println("HELP received on general channel - sending help");
+      extern const String DEVICE_MQTT_TOPIC_OUT;
+      extern const String DEVICE_MQTT_TOPIC_IN;
+      String helpMsg = String("") +
+        "📋 *YAI Ultrasonic Sensor – Ayuda*\n\n" +
+        "📡 *Canal general* `yai-mqtt/in` (solo escucha aquí):\n" +
+        "  🏓 `PING` → responde PONG con IP y topics\n" +
+        "  ❓ `HELP` → muestra esta ayuda\n\n" +
+        "⚙️ *Canal específico* `yai-mqtt/" + DEVICE_ID + "/in`:\n" +
+        "  🟢 `ON,<ms>,0,0,0,0,0,0` → activar lecturas (ej: ON,2000 = cada 2s)\n" +
+        "  🔴 `OFF,0,0,0,0,0,0,0` → desactivar lecturas\n\n" +
+        "📈 *Lecturas* en `yai-mqtt/" + DEVICE_ID + "/out`:\n" +
+        "  Formato: `DEVICE_ID,OKO|NOK,distancia_cm,timestamp`\n" +
+        "  ✅ OKO = medición válida (2–400 cm)\n" +
+        "  ❌ NOK = error o fuera de rango";
+      clientMqtt.publish(MQTT_TOPIC_OUT, helpMsg.c_str());
     }
+    return;
+  }
+  if (msgPayload == "PING" || msgPayload == "HELP") {
+    Serial.println("PING/HELP ignored - only accepted on general channel");
     return;
   }
 
@@ -96,7 +113,7 @@ void reconnect() {
                        ", Device=" + DEVICE_ID +
                        ", Listening=" + String(MQTT_TOPIC_IN) + " and " + DEVICE_MQTT_TOPIC_IN +
                        ", Responding=" + String(MQTT_TOPIC_OUT) + " and " + DEVICE_MQTT_TOPIC_OUT +
-                       ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0 | PING->PONG";
+                       ", Commands=ON,<interval>,0,0,0,0,0,0 | OFF,0,0,0,0,0,0,0 | PING->PONG | HELP->ayuda";
       clientMqtt.publish(MQTT_TOPIC_OUT, mqttInfo.c_str());
 
       // Mostrar también por serial
