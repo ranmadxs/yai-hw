@@ -130,7 +130,7 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 ```
 
 **Campos:**
-- `<DEVICE_ID>`: ID único del dispositivo (YUS = Ultrasonic Sensor + versión)
+- `<DEVICE_ID>`: ID único del dispositivo (`YUS-` + ID corto del chip, por ejemplo `YUS-1A2B3C4D`)
 - `OKO`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `25.50`: Distancia medida en centímetros (2 decimales)
 - `2024-01-15 14:30:25`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)

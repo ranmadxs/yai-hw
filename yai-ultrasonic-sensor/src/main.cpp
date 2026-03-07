@@ -7,10 +7,32 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
+#if defined(ESP32)
+#include <esp_system.h>
+#elif defined(ESP8266)
+#include <ESP.h>
+#endif
+
 const char* YAI_VERSION="0.3.0-COSTA";
 
-// Device ID estático para el sensor
-const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
+// Genera un ID corto basado en el chip (8 hex) para que DEVICE_ID tenga 12 caracteres: "YUS-" + 8HEX
+String getChipShortId() {
+  char id[9];
+#if defined(ESP32)
+  uint64_t chipid = ESP.getEfuseMac();
+  uint32_t low = (uint32_t)(chipid & 0xFFFFFFFF);
+  sprintf(id, "%08X", low);
+#elif defined(ESP8266)
+  uint32_t chipid = ESP.getChipId();
+  sprintf(id, "%08X", chipid);
+#else
+  sprintf(id, "%08X", 0xFFFFFFFF);
+#endif
+  return String(id);
+}
+
+// Device ID basado en identificador único del chip (ej: YUS-1A2B3C4D), longitud máx. 12
+const String DEVICE_ID = "YUS-" + getChipShortId();
 
 // Canales MQTT específicos del dispositivo
 const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + DEVICE_ID + "/out";
