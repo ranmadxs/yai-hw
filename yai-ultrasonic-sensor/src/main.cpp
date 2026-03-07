@@ -13,9 +13,9 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.0-COSTA";
+const char* YAI_VERSION="0.3.1-COSTA";
 
-// Genera un ID corto basado en el chip (8 hex) para que DEVICE_ID tenga 12 caracteres: "YUS-" + 8HEX
+// Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
   char id[9];
 #if defined(ESP32)
@@ -31,12 +31,15 @@ String getChipShortId() {
   return String(id);
 }
 
-// Device ID basado en identificador único del chip (ej: YUS-1A2B3C4D), longitud máx. 12
-const String DEVICE_ID = "YUS-" + getChipShortId();
+// Identificador de canal MQTT basado en el chip (ej: 1A2B3C4D), longitud máx. 8
+const String CHANNEL_ID = getChipShortId();
 
-// Canales MQTT específicos del dispositivo
-const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + DEVICE_ID + "/out";
-const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + DEVICE_ID + "/in";
+// Device ID estático para el sensor (incluye versión, se usa en mensajes)
+const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
+
+// Canales MQTT específicos del dispositivo (usan CHANNEL_ID, no DEVICE_ID)
+const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + CHANNEL_ID + "/out";
+const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + CHANNEL_ID + "/in";
 
 // Variables globales para controlar logs del sensor
 bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto

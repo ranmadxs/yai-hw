@@ -105,9 +105,9 @@ MQTT >> <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 
 ### Tópicos de comunicación:
 - **IN General**: `yai-mqtt/in` - Comandos PING (conectividad) y HELP (ayuda de uso)
-- **IN Específico**: `yai-mqtt/<DEVICE_ID>/in` - Para comandos ON/OFF (control del sensor)
+- **IN Específico**: `yai-mqtt/<CHANNEL_ID>/in` - Para comandos ON/OFF (control del sensor)
 - **OUT General**: `yai-mqtt/out` - Respuestas a comandos, PONG y HELP
-- **OUT Específico**: `yai-mqtt/<DEVICE_ID>/out` - Para datos del sensor
+- **OUT Específico**: `yai-mqtt/<CHANNEL_ID>/out` - Para datos del sensor
 
 ### Servidor MQTT por defecto:
 - **Host**: `broker.mqttdashboard.com`
@@ -122,7 +122,7 @@ Los mensajes se publican en **canales específicos según el tipo**:
 
 #### Datos del sensor:
 Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
-- `yai-mqtt/<DEVICE_ID>/out` - Canal específico del dispositivo
+- `yai-mqtt/<CHANNEL_ID>/out` - Canal específico del dispositivo
 
 **Formato:**
 ```
@@ -130,7 +130,7 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 ```
 
 **Campos:**
-- `<DEVICE_ID>`: ID único del dispositivo (`YUS-` + ID corto del chip, por ejemplo `YUS-1A2B3C4D`)
+- `<DEVICE_ID>`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.0-COSTA`)
 - `OKO`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `25.50`: Distancia medida en centímetros (2 decimales)
 - `2024-01-15 14:30:25`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
@@ -138,7 +138,7 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 #### Respuestas a comandos:
 Las respuestas a comandos de control se envían a **AMBOS canales**:
 - `yai-mqtt/out` - Canal general compartido
-- `yai-mqtt/<DEVICE_ID>/out` - Canal específico del dispositivo
+- `yai-mqtt/<CHANNEL_ID>/out` - Canal específico del dispositivo
 
 **Formatos:**
 ```
@@ -177,19 +177,19 @@ ON,2000,0,0,0,0,0,0
 
 1. **Enviar comando para activar logs (canal específico):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
    ```
 
 2. **Recibir respuesta (en ambos canales):**
    ```
    yai-mqtt/out: <DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
+   yai-mqtt/<CHANNEL_ID>/out: <DEVICE_ID>,Ultrasonic logs enabled, interval: 2000ms
    ```
 
 3. **Recibir datos del sensor cada 2 segundos (solo canal específico):**
    ```
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,OKO,25.60,2024-01-15 14:30:27
+   yai-mqtt/<CHANNEL_ID>/out: <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
+   yai-mqtt/<CHANNEL_ID>/out: <DEVICE_ID>,OKO,25.60,2024-01-15 14:30:27
    ```
 
 4. **Enviar comando para verificar conectividad o ayuda (canal general):**
@@ -200,30 +200,30 @@ ON,2000,0,0,0,0,0,0
 
 5. **Recibir respuesta PONG o HELP (canal general `yai-mqtt/out`):**
    ```
-   yai-mqtt/out: PONG,<DEVICE_ID>,IP:192.168.1.100,IN:yai-mqtt/in,OUT:yai-mqtt/out,DEVICE_IN:yai-mqtt/<DEVICE_ID>/in,DEVICE_OUT:yai-mqtt/<DEVICE_ID>/out,SERVER:broker.mqttdashboard.com:1883
+   yai-mqtt/out: PONG,<DEVICE_ID>,IP:192.168.1.100,IN:yai-mqtt/in,OUT:yai-mqtt/out,DEVICE_IN:yai-mqtt/<CHANNEL_ID>/in,DEVICE_OUT:yai-mqtt/<CHANNEL_ID>/out,SERVER:broker.mqttdashboard.com:1883
    ```
 
 6. **Enviar comando para desactivar logs (canal específico):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
    ```
 
 7. **Recibir respuesta de confirmación (en ambos canales):**
    ```
    yai-mqtt/out: <DEVICE_ID>,Ultrasonic logs disabled
-   yai-mqtt/<DEVICE_ID>/out: <DEVICE_ID>,Ultrasonic logs disabled
+   yai-mqtt/<CHANNEL_ID>/out: <DEVICE_ID>,Ultrasonic logs disabled
    ```
 
 ### Ejemplos de comandos usando canales específicos:
 
 **Enviar comando ON (solo funciona en canal específico):**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
 ```
 
 **Enviar comando OFF (solo funciona en canal específico):**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
 ```
 
 **Enviar PING o HELP (solo en canal general):**
@@ -233,7 +233,7 @@ mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "HELP"
 ```
 
 **Nota:** Los comandos ON/OFF serán ignorados si se envían al canal general (`yai-mqtt/in`).
-Los comandos PING y HELP serán ignorados si se envían al canal específico (`yai-mqtt/<DEVICE_ID>/in`).
+Los comandos PING y HELP serán ignorados si se envían al canal específico (`yai-mqtt/<CHANNEL_ID>/in`).
 
 ### Suscripción a canales específicos:
 
@@ -244,12 +244,12 @@ mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
 
 **Suscribirse solo al canal específico del dispositivo:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/out"
+mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/out"
 ```
 
 **Suscribirse a todos los canales del dispositivo:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<DEVICE_ID>/#"
+mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/#"
 ```
 
 ## Herramientas de Prueba MQTT
