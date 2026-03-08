@@ -32,9 +32,10 @@ void callbackMqtt(char* topic, byte* payload, unsigned int length) {
   if (isGeneralChannel && (msgPayload == "PING" || msgPayload == "HELP")) {
     if (msgPayload == "PING") {
       Serial.println("PING received on general channel - sending PONG");
+      extern const String CHANNEL_ID;
       extern const String DEVICE_MQTT_TOPIC_OUT;
       extern const String DEVICE_MQTT_TOPIC_IN;
-      String pongResponse = "PONG," + DEVICE_ID +
+      String pongResponse = "PONG," + CHANNEL_ID + "@" + DEVICE_ID +
                          ",IP:" + yaiWifi.getIp() +
                          ",IN:" + String(MQTT_TOPIC_IN) +
                          ",OUT:" + String(MQTT_TOPIC_OUT) +
