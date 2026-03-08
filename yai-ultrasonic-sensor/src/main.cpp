@@ -13,7 +13,7 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.4-COSTA";
+const char* YAI_VERSION="0.3.7-COSTA";
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -38,7 +38,7 @@ extern const float TANK_DEPTH_CM = 160.0;
 extern const float TANK_CAPACITY_LITERS = 5000.0;
 
 // Identificador de canal MQTT basado en el chip (ej: 1A2B3C4D), longitud máx. 8
-const String CHANNEL_ID = getChipShortId();
+extern const String CHANNEL_ID = getChipShortId();
 
 // Device ID estático para el sensor (incluye versión, se usa en mensajes)
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
@@ -85,7 +85,7 @@ void setup() {
   Serial.begin(115200); // opens serial port, sets data rate to 115200 bps
   existCMD = false;
   Serial.println(" ####################################");
-  String yaiServerVersion = " ## yai-ultrasonic-sensor " + DEVICE_ID + " ##";
+  String yaiServerVersion = " ## yai-ultrasonic-sensor: " + CHANNEL_ID + " @ " + DEVICE_ID + " ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ####################################");  
   if (ENABLE_WIFI) { 
