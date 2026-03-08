@@ -127,24 +127,28 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 **Formato (JSON):**
 ```json
 {
-  "deviceId": "YUS-0.3.1-COSTA",
+  "deviceId": "YUS-0.3.4-COSTA",
   "status": "OKO",
   "distanceCm": 25.50,
   "timestamp": "2024-01-15 14:30:25",
   "tankDepthCm": 160.0,
   "remainingToFullCm": 134.50,
-  "fillLevelPercent": 84.06
+  "fillLevelPercent": 84.06,
+  "litros": 4203,
+  "levelBar": "[########--]"
 }
 ```
 
 **Campos:**
-- `deviceId`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.1-COSTA`)
+- `deviceId`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.4-COSTA`)
 - `status`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `distanceCm`: Distancia medida por el sensor en centímetros (2 decimales)
 - `timestamp`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
 - `tankDepthCm`: Profundidad total considerada del tanque en centímetros (ej: 160.0 = 1.60 m)
 - `remainingToFullCm`: Cuánto le falta para llenarse en centímetros (0 = lleno, profundidad completa)
 - `fillLevelPercent`: Nivel de llenado en porcentaje (0–100)
+- `litros`: Cantidad de litros en el tanque (basado en `TANK_CAPACITY_LITERS`)
+- `levelBar`: Barra visual de nivel `[##########]` donde `#` = lleno, `-` = vacío (10 posiciones)
 
 #### Respuestas a comandos:
 Las respuestas a comandos de control se envían a **AMBOS canales**:
@@ -289,6 +293,19 @@ mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
 - **Rango de medición:** 2-400 cm
 - **Intervalo por defecto:** 1500ms (1.5 segundos)
 - **Velocidad del sonido:** 0.0343 cm/μs
+
+### Configuración del Tanque (main.cpp)
+
+```cpp
+// Profundidad del tanque en cm (distancia del sensor al fondo)
+extern const float TANK_DEPTH_CM = 160.0;
+
+// Capacidad del tanque en litros cuando está lleno
+extern const float TANK_CAPACITY_LITERS = 5000.0;
+```
+
+- `TANK_DEPTH_CM`: Altura desde el sensor hasta el fondo del tanque (ej: 160 cm = 1.60 m)
+- `TANK_CAPACITY_LITERS`: Capacidad máxima del tanque en litros (ej: 5000 L)
 
 ### Estados del Sensor
 

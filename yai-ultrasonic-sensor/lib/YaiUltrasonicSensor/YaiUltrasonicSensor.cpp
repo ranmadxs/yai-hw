@@ -83,6 +83,9 @@ static const float DISTANCIA_MAX_CM = 400.0;
 // Profundidad del tanque en cm definida en main.cpp
 extern const float TANK_DEPTH_CM;
 
+// Capacidad del tanque en litros definida en main.cpp
+extern const float TANK_CAPACITY_LITERS;
+
 void YaiUltrasonicSensor::calculateDistance(long duration) {
   // Distancia = (Tiempo * Velocidad) / 2 (porque el sonido va y vuelve)
   currentDistance = (duration * VELOCIDAD_SONIDO) / 2;
@@ -132,6 +135,19 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
       fillLevelPercent = (filledHeightCm / TANK_DEPTH_CM) * 100.0;
     }
 
+    // Calcular litros usando la capacidad definida en main.cpp
+    float litros = (fillLevelPercent / 100.0) * TANK_CAPACITY_LITERS;
+
+    // Generar barra de nivel visual [####------] (10 posiciones)
+    int numLleno = (int)(fillLevelPercent / 10.0 + 0.5);
+    if (numLleno > 10) numLleno = 10;
+    if (numLleno < 0) numLleno = 0;
+    String levelBar = "[";
+    for (int i = 0; i < 10; i++) {
+      levelBar += (i < numLleno) ? "#" : "-";
+    }
+    levelBar += "]";
+
     String mensaje = "{";
     mensaje += "\"deviceId\":\"" + DEVICE_ID + "\"";
     mensaje += ",\"status\":\"" + currentStatus + "\"";
@@ -140,6 +156,8 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
     mensaje += ",\"tankDepthCm\":" + String(TANK_DEPTH_CM, 2);
     mensaje += ",\"remainingToFullCm\":" + String(remainingToFullCm, 2);
     mensaje += ",\"fillLevelPercent\":" + String(fillLevelPercent, 2);
+    mensaje += ",\"litros\":" + String(litros, 0);
+    mensaje += ",\"levelBar\":\"" + levelBar + "\"";
     mensaje += "}";
 
     // Enviamos SOLO al canal específico del dispositivo (NO al canal general)

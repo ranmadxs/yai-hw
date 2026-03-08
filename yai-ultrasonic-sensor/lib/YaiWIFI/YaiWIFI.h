@@ -18,7 +18,7 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 
-const int totalWifi = 5;
+const int totalWifi = 6;
 const int retryWifi = 25;
 
 class YaiWIFICallBack {
@@ -59,6 +59,7 @@ class YaiWIFI {
     String ipLocal;
     boolean connectedWifi;
     char* arrayWifi[totalWifi][2] = {
+      { "Wokwi-GUEST", "" },
       { "YaiCosta", "1101000000" },
       { "Patitas", "21193120" },
       { "Patitas-EXT", "21193120" },
