@@ -4,6 +4,7 @@
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
+#include "YaiHttpClient.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
@@ -13,7 +14,9 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.8-COSTA";
+#ifndef YAI_VERSION
+#define YAI_VERSION "0.3.8-COSTA"
+#endif
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -34,8 +37,15 @@ String getChipShortId() {
 // Profundidad del tanque en cm (por ejemplo 1.60 m = 160 cm)
 extern const float TANK_DEPTH_CM = 160.0;
 
+// Offset del sensor en cm: el sensor está montado X cm por encima del nivel de referencia.
+// Se resta a la medida para obtener la distancia corregida al agua.
+extern const float SENSOR_HEIGHT_OFFSET_CM = 15.0;
+
 // Capacidad del tanque en litros cuando está lleno
 extern const float TANK_CAPACITY_LITERS = 5000.0;
+
+// URL pública de tomi-metric-collector (ej: "https://mi-servidor.com" o "" para deshabilitar)
+const char* TOMI_METRICS_URL = "https://tomi-metric-collector-production.up.railway.app/";
 
 // Identificador de canal MQTT basado en el chip (ej: 1A2B3C4D), longitud máx. 8
 extern const String CHANNEL_ID = getChipShortId();
@@ -48,7 +58,7 @@ const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + CHANNEL_ID + "/out";
 const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + CHANNEL_ID + "/in";
 
 // Variables globales para controlar logs del sensor
-bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto
+bool ultrasonicLogsEnabled = false;  // Logs del sensor ocultos por defecto (ON para activar)
 unsigned long ultrasonicMeasurementInterval = 1500; // Intervalo por defecto (1.5 segundos)
 
 // Definición de pines del sensor ultrasónico
@@ -57,6 +67,9 @@ const int PIN_ECHO = 18; // Recibir respuesta
 
 // Instancia del sensor ultrasónico
 YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, ultrasonicMeasurementInterval);
+
+// Cliente HTTP para envío batch a tomi-metric-collector (cada 1 min)
+YaiHttpClient httpClient;
 
 // Cliente NTP para obtener la hora actual
 WiFiUDP ntpUDP;
@@ -111,6 +124,15 @@ void setup() {
   
   // Inicializamos el sensor ultrasónico
   sensorUltrasonico.begin();
+
+  // Configuramos HTTP para envío batch a tomi-metric-collector y forzar-guardado
+  if (strlen(TOMI_METRICS_URL) > 0) {
+    httpClient.setBaseUrl(TOMI_METRICS_URL);
+    httpClient.setAiaOrigin((DEVICE_ID + "@" + CHANNEL_ID).c_str());
+    sensorUltrasonico.setHttpClient(&httpClient);
+    Serial.println("HTTP >> Tomi Metrics URL: " + String(TOMI_METRICS_URL));
+    Serial.println("HTTP >> X-Aia-Origin: " + DEVICE_ID + "@" + CHANNEL_ID);
+  }
   
   // Configuramos MQTT para el sensor si está habilitado
   if (ENABLE_MQTT) {
@@ -152,6 +174,9 @@ void loop() {
     }
     clientMqtt.loop();
   }
+
+  // Loop del cliente HTTP (envía batch cada 1 min si hay lecturas)
+  httpClient.loop();
   
   // Loop del sensor ultrasónico (maneja lectura y envío MQTT)
   sensorUltrasonico.loop();

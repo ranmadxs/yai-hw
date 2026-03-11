@@ -1,4 +1,5 @@
 #include "YaiUltrasonicSensor.h"
+#include "YaiHttpClient.h"
 
 // External declarations
 extern const String DEVICE_ID;
@@ -16,6 +17,7 @@ YaiUltrasonicSensor::YaiUltrasonicSensor(int pinTrig, int pinEcho, unsigned long
   this->clientMqtt = nullptr;
   this->mqttTopic = nullptr;
   this->mqttEnabled = false;
+  this->httpClient = nullptr;
 }
 
 void YaiUltrasonicSensor::begin() {
@@ -33,6 +35,10 @@ void YaiUltrasonicSensor::setMqttClient(PubSubClient* client) {
 
 void YaiUltrasonicSensor::setMqttTopic(const char* topic) {
   this->mqttTopic = topic;
+}
+
+void YaiUltrasonicSensor::setHttpClient(YaiHttpClient* client) {
+  this->httpClient = client;
 }
 
 void YaiUltrasonicSensor::loop() {
@@ -84,15 +90,21 @@ static const float DISTANCIA_MAX_CM = 400.0;
 // Profundidad del tanque en cm definida en main.cpp
 extern const float TANK_DEPTH_CM;
 
+// Offset del sensor (cm por encima del nivel de referencia), definido en main.cpp
+extern const float SENSOR_HEIGHT_OFFSET_CM;
+
 // Capacidad del tanque en litros definida en main.cpp
 extern const float TANK_CAPACITY_LITERS;
 
 void YaiUltrasonicSensor::calculateDistance(long duration) {
   // Distancia = (Tiempo * Velocidad) / 2 (porque el sonido va y vuelve)
-  currentDistance = (duration * VELOCIDAD_SONIDO) / 2;
-  
+  float rawDistance = (duration * VELOCIDAD_SONIDO) / 2;
+  // Corregir: el sensor está SENSOR_HEIGHT_OFFSET_CM por encima del nivel de referencia
+  currentDistance = rawDistance - SENSOR_HEIGHT_OFFSET_CM;
+  if (currentDistance < 0) currentDistance = 0;
+
   // duration==0 → timeout (sin eco). Fuera de 2-400 cm → inválido (ruido, cable suelto, o fuera de rango)
-  if (duration == 0 || currentDistance < DISTANCIA_MIN_CM || currentDistance > DISTANCIA_MAX_CM) {
+  if (duration == 0 || rawDistance < DISTANCIA_MIN_CM || rawDistance > DISTANCIA_MAX_CM) {
     currentStatus = String(STATUS_NOK);
   } else {
     currentStatus = String(STATUS_OK);
@@ -164,6 +176,11 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
 
     // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
     clientMqtt->publish(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje.c_str());
+
+    // Acumular para envío HTTP batch (cada 1 min)
+    if (httpClient != nullptr) {
+      httpClient->addReading(mensaje);
+    }
 
     // Mostramos mensaje MQTT solo si logs están habilitados
     if (ultrasonicLogsEnabled) {

@@ -1,38 +1,111 @@
-## Run
+## yai-ultrasonic-sensor
+https://tomi-metric-collector-production.up.railway.app/
+Sensor ultrasónico para medición de nivel de líquidos (tanques, tinajas). Publica lecturas por MQTT en formato JSON y opcionalmente envía datos a tomi-metric-collector vía HTTP.
 
-### Run 01SerialPrint
+**Plataformas soportadas:** ESP32, ESP8266 (NodeMCU v2).
+
+---
+
+## Requisitos
+
+- [PlatformIO](https://platformio.org/) (CLI o extensión para VS Code)
+- Puerto serial USB para upload y monitor
+
+---
+
+## Compilar
+
+Compilar todos los entornos (esp32, nodemcuv2):
 
 ```bash
-
-# Compile
-platformio run
-
-# Compile and upload
-platformio run --target upload
-pio run -t upload --environment nodemcuv2
-pio run -t upload --environment esp32
-
-# if msg error 
-# [Errno 13] Permission denied: '/dev/ttyUSB0'
-
-sudo chown esanchez:esanchez /dev/ttyUSB0
-
+pio run
 ```
 
-# Connect to monitor
+Compilar solo un entorno:
 
-## default 9600
 ```bash
+pio run -e esp32
+pio run -e nodemcuv2
+```
+
+Limpiar build (útil si hay errores extraños de compilación):
+
+```bash
+pio run -t clean
+```
+
+---
+
+## Subir firmware
+
+```bash
+# Subir al entorno por defecto (esp32)
+pio run -t upload
+
+# Subir a un entorno específico
+pio run -t upload -e esp32
+pio run -t upload -e nodemcuv2
+```
+
+**Si aparece `[Errno 13] Permission denied: '/dev/ttyUSB0'`:**
+
+```bash
+sudo chown $USER:$(groups | cut -d' ' -f1) /dev/ttyUSB0
+# o añadir tu usuario al grupo dialout:
+sudo usermod -a -G dialout $USER
+```
+
+---
+
+## Monitor serial
+
+El monitor usa **115200 baud** por defecto (configurado en `platformio.ini`).
+
+```bash
+# Abrir monitor (usa la velocidad del entorno)
 pio device monitor
+
+# Especificar velocidad manualmente
 pio device monitor -b 115200
 
-# see serial device monitor send to file out
-pio device monitor -f log2file -f default
-
-## List Devices
-
-pio device list
+# Compilar, subir y abrir monitor en un solo comando
+pio run -t upload && pio device monitor
 ```
+
+**Opciones útiles:**
+
+```bash
+# Listar dispositivos seriales conectados
+pio device list
+
+# Especificar puerto (si hay varios dispositivos)
+pio device monitor -p /dev/ttyUSB0
+
+# Guardar salida del monitor en archivo
+pio device monitor -f log2file -f default
+```
+
+---
+
+## Versión del firmware
+
+La versión se define en `platformio.ini` (sección `[env]`). Para cambiarla, edita:
+
+```ini
+[env]
+build_flags = -DYAI_VERSION=\"1.0.0-YUS-COSTA\"
+```
+
+---
+
+## Entornos de build (platformio.ini)
+
+| Entorno    | Placa        | Uso                          |
+|------------|--------------|------------------------------|
+| `esp32`    | ESP32-PRO    | Producción (OLIMEX)          |
+| `nodemcuv2`| NodeMCU v2   | ESP8266                      |
+
+---
 
 ## Comandos de Control
 
@@ -103,6 +176,8 @@ MQTT >> <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 
 ## MQTT Topics
 
+**Nota:** `<CHANNEL_ID>` es un ID de 8 caracteres hex único por dispositivo (ej: `1A2B3C4D`). Se muestra en el mensaje de inicio por Serial al conectar el dispositivo.
+
 ### Tópicos de comunicación:
 - **IN General**: `yai-mqtt/in` - Comandos PING (conectividad) y HELP (ayuda de uso)
 - **IN Específico**: `yai-mqtt/<CHANNEL_ID>/in` - Para comandos ON/OFF (control del sensor)
@@ -128,6 +203,7 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 ```json
 {
   "deviceId": "YUS-0.3.4-COSTA",
+  "channelId": "1A2B3C4D",
   "status": "OKO",
   "distanceCm": 25.50,
   "timestamp": "2024-01-15 14:30:25",
@@ -141,6 +217,7 @@ Los datos del sensor se envían **SOLO** al canal específico del dispositivo:
 
 **Campos:**
 - `deviceId`: ID del dispositivo con versión (`YUS-` + versión, por ejemplo `YUS-0.3.4-COSTA`)
+- `channelId`: ID corto del chip (8 hex), usado en los topics MQTT (ej: `1A2B3C4D`)
 - `status`: Estado del sensor (`OKO` = OK, `NOK` = Error/Ningún objeto detectado)
 - `distanceCm`: Distancia medida por el sensor en centímetros (2 decimales)
 - `timestamp`: Timestamp del sistema (formato NTP cuando hay WiFi, milisegundos si no)
@@ -173,18 +250,24 @@ ON,2000,0,0,0,0,0,0
 
 ### Ejemplos de uso MQTT:
 
-1. **Activar logs cada 2 segundos:**
+1. **Activar logs cada 2 segundos** (enviar al canal específico del dispositivo):
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "ON,2000,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
    ```
 
-2. **Desactivar logs:**
+2. **Desactivar logs** (canal específico):
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "OFF,0,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
    ```
 
-3. **Suscribirse a los datos del sensor:**
+3. **Suscribirse a los datos del sensor** (canal específico donde se publican las lecturas JSON):
    ```bash
+   mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/out"
+   ```
+
+4. **PING o HELP** (canal general):
+   ```bash
+   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
    mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
    ```
 
@@ -302,10 +385,14 @@ extern const float TANK_DEPTH_CM = 160.0;
 
 // Capacidad del tanque en litros cuando está lleno
 extern const float TANK_CAPACITY_LITERS = 5000.0;
+
+// URL de tomi-metric-collector para envío HTTP batch (vacío = deshabilitado)
+const char* TOMI_METRICS_URL = "https://mi-servidor.com";
 ```
 
 - `TANK_DEPTH_CM`: Altura desde el sensor hasta el fondo del tanque (ej: 160 cm = 1.60 m)
 - `TANK_CAPACITY_LITERS`: Capacidad máxima del tanque en litros (ej: 5000 L)
+- `TOMI_METRICS_URL`: URL base del tomi-metric-collector. Las lecturas se acumulan y se envían en batch cada 1 minuto a `POST /monitor/api/lecturas`
 
 ### Estados del Sensor
 
