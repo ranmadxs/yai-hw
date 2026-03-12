@@ -1,5 +1,6 @@
 #include "YaiUltrasonicSensor.h"
 #include "YaiHttpClient.h"
+#include "YaiUdpDiscovery.h"
 
 // External declarations
 extern const String DEVICE_ID;
@@ -18,6 +19,7 @@ YaiUltrasonicSensor::YaiUltrasonicSensor(int pinTrig, int pinEcho, unsigned long
   this->mqttTopic = nullptr;
   this->mqttEnabled = false;
   this->httpClient = nullptr;
+  this->udpDiscovery = nullptr;
 }
 
 void YaiUltrasonicSensor::begin() {
@@ -41,16 +43,23 @@ void YaiUltrasonicSensor::setHttpClient(YaiHttpClient* client) {
   this->httpClient = client;
 }
 
+void YaiUltrasonicSensor::setUdpDiscovery(YaiUdpDiscovery* udp) {
+  this->udpDiscovery = udp;
+}
+
 void YaiUltrasonicSensor::loop() {
-  if (ultrasonicLogsEnabled) {
-    unsigned long currentTime = millis();
-    if (currentTime - lastMeasurement >= ultrasonicMeasurementInterval) {
-      lastMeasurement = currentTime;
-      readSensor();
-      if (mqttEnabled && mqttTopic != nullptr) {
-        sendDataToMqtt();
-      }
-    }
+  // Medir solo cuando hay destinatario: evita bloqueo de pulseIn durante discovery
+  bool tieneDestinatario = ultrasonicLogsEnabled ||
+    (udpDiscovery && udpDiscovery->hasSubscriber()) ||
+    (httpClient != nullptr) ||
+    (mqttEnabled && clientMqtt != nullptr);
+  if (!tieneDestinatario) return;
+
+  unsigned long currentTime = millis();
+  if (currentTime - lastMeasurement >= ultrasonicMeasurementInterval) {
+    lastMeasurement = currentTime;
+    readSensor();
+    publishReading();
   }
 }
 
@@ -65,14 +74,15 @@ void YaiUltrasonicSensor::readSensor() {
   digitalWrite(pinTrig, LOW);
 
   // 3. Leemos el tiempo que tarda el sonido en volver (en microsegundos)
-  // pulseIn espera a que el pin pase a HIGH y cuenta el tiempo
-  long duration = pulseIn(pinEcho, HIGH);
+  // Timeout 60ms: suficiente para 400cm (~24ms), evita bloqueos de 1s cuando no hay eco
+  long duration = pulseIn(pinEcho, HIGH, 60000);
 
   // 4. Calculamos la distancia y determinamos el estado
   calculateDistance(duration);
 
   // 5. Imprimimos resultados por serial solo si logs están habilitados
   if (ultrasonicLogsEnabled) {
+    Serial.print(DEVICE_ID + "@" + CHANNEL_ID + " % ");
     Serial.print("Distancia: ");
     Serial.print(currentDistance);
     Serial.print(" cm | Estado: ");
@@ -111,9 +121,11 @@ void YaiUltrasonicSensor::calculateDistance(long duration) {
   }
 }
 
-void YaiUltrasonicSensor::sendDataToMqtt() {
-  if (mqttEnabled && clientMqtt != nullptr && clientMqtt->connected()) {
-    // Formato JSON para datos del sensor:
+void YaiUltrasonicSensor::publishReading() {
+  // Publicar a MQTT, HTTP y/o UDP cuando hay subscriber o cliente configurado
+  if (!udpDiscovery && !httpClient && !(mqttEnabled && clientMqtt != nullptr)) return;
+
+  // Formato JSON para datos del sensor:
     // {
     //   "deviceId": "...",
     //   "status": "OKO" | "NOK",
@@ -174,19 +186,30 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
     mensaje += ",\"levelBar\":\"" + levelBar + "\"";
     mensaje += "}";
 
-    // Enviamos SOLO al canal específico del dispositivo (NO al canal general)
+  // Enviar por MQTT si está habilitado
+  if (mqttEnabled && clientMqtt != nullptr && clientMqtt->connected() && mqttTopic != nullptr) {
     clientMqtt->publish(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje.c_str());
-
-    // Acumular para envío HTTP batch (cada 1 min)
-    if (httpClient != nullptr) {
-      httpClient->addReading(mensaje);
-    }
-
-    // Mostramos mensaje MQTT solo si logs están habilitados
-    if (ultrasonicLogsEnabled) {
-      Serial.println("MQTT >> " + mensaje + " (enviado a " + DEVICE_MQTT_TOPIC_OUT + ")");
-    }
   }
+
+  // Acumular para envío HTTP batch (cada 1 min)
+  if (httpClient != nullptr) {
+    httpClient->addReading(mensaje);
+  }
+
+  // Enviar por UDP al subscriber (topic real: yai-mqtt/<CHANNEL_ID>/out)
+  if (udpDiscovery != nullptr) {
+    udpDiscovery->sendToTopic(DEVICE_MQTT_TOPIC_OUT.c_str(), mensaje);
+  }
+
+  // Mostrar por Serial solo si logs están habilitados
+  if (ultrasonicLogsEnabled) {
+    Serial.print(DEVICE_ID + "@" + CHANNEL_ID + " % ");
+    Serial.println("MQTT >> " + mensaje);
+  }
+}
+
+void YaiUltrasonicSensor::sendDataToMqtt() {
+  publishReading();
 }
 
 float YaiUltrasonicSensor::getDistance() {

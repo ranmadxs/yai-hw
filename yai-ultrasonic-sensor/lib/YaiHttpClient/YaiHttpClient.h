@@ -63,6 +63,9 @@ private:
   unsigned long _lastForzarGuardadoTime;
   unsigned long _forzarGuardadoIntervalMs;
   bool _sending;
+#if defined(ESP32)
+  bool _forzarGuardadoInProgress;
+#endif
 };
 
 #endif

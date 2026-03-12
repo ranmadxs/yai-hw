@@ -5,6 +5,8 @@
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
 #include "YaiHttpClient.h"
+#include "YaiUdpDiscovery.h"
+#include "YaiWebServer.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
@@ -15,8 +17,13 @@
 #endif
 
 #ifndef YAI_VERSION
-#define YAI_VERSION "0.3.8-COSTA"
+#define YAI_VERSION "0.3.9-COSTA"
 #endif
+
+#ifndef DEVICE_DESCRIPTION
+#define DEVICE_DESCRIPTION ""
+#endif
+const char* DEVICE_DESCRIPTION_STR = DEVICE_DESCRIPTION;
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -59,6 +66,10 @@ const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + CHANNEL_ID + "/in";
 
 // Variables globales para controlar logs del sensor
 bool ultrasonicLogsEnabled = false;  // Logs del sensor ocultos por defecto (ON para activar)
+#ifndef UDP_DISCOVERY_LOGS_ENABLED
+#define UDP_DISCOVERY_LOGS_ENABLED 0
+#endif
+bool udpDiscoveryLogsEnabled = (UDP_DISCOVERY_LOGS_ENABLED != 0);  // Definido en platformio.ini build_flags
 unsigned long ultrasonicMeasurementInterval = 1500; // Intervalo por defecto (1.5 segundos)
 
 // Definición de pines del sensor ultrasónico
@@ -70,6 +81,12 @@ YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, ultrasonicMeasurementI
 
 // Cliente HTTP para envío batch a tomi-metric-collector (cada 1 min)
 YaiHttpClient httpClient;
+
+// UDP Discovery para app Android (puerto 9999, responde AIA-DISCOVER con JSON)
+YaiUdpDiscovery udpDiscovery;
+
+// WebServer HTTP (puerto 80): GET/POST /api/wifi para scan y configurar WiFi
+YaiWebServer webServer;
 
 // Cliente NTP para obtener la hora actual
 WiFiUDP ntpUDP;
@@ -106,10 +123,35 @@ void setup() {
     yaiWifi.connect();
   }
   if (ENABLE_WIFI) {
-    Serial.println(" ######### DNS Server ###########");
-    String dnsName = "YAI_SRV_ULTRASONIC";
-    Serial.println(dnsName);
-    yaiWifi.startDNSServer(dnsName);
+    Serial.println(" ######### DNS Server (AP) ###########");
+    String apSsid = CHANNEL_ID + "_" + DEVICE_ID;
+    Serial.println("AP SSID: " + apSsid);
+    yaiWifi.startDNSServer(apSsid);
+
+    // UDP Discovery (app Android: discovery + lecturas por yai-mqtt/<CHANNEL>/out, comandos por yai-mqtt/<CHANNEL>/in)
+    udpDiscovery.begin(
+      DEVICE_ID.c_str(),
+      CHANNEL_ID.c_str(),
+      YAI_VERSION,
+      DEVICE_MQTT_TOPIC_IN.c_str(),
+      DEVICE_MQTT_TOPIC_OUT.c_str(),
+      (DEVICE_DESCRIPTION_STR[0] != '\0') ? DEVICE_DESCRIPTION_STR : nullptr,
+      "estanque"
+    );
+    udpDiscovery.setOnCommandCallback([](const char* payload) {
+      YaiCommand cmd;
+      cmd.message = payload;
+      cmd.type = String(YAI_COMMAND_TYPE_SERIAL);
+      cmd.execute = true;
+      cmd.print = true;
+      yaiUtil.string2YaiCommand(cmd);
+      commandFactoryExecute(cmd);
+    });
+
+    // WebServer para /api/wifi (GET: scan + conectado, POST: ssid+pass para conectar)
+    webServer.setWifiRestoreCallback([]() { yaiWifi.connect(); });
+    webServer.setWifiSaveCallback([](const char* s, const char* p) { yaiWifi.saveStoredWifi(s, p); });
+    webServer.begin();
 
     // Inicializar NTP Client
     Serial.println(" ######### NTP Client ###########");
@@ -124,6 +166,8 @@ void setup() {
   
   // Inicializamos el sensor ultrasónico
   sensorUltrasonico.begin();
+
+  sensorUltrasonico.setUdpDiscovery(&udpDiscovery);
 
   // Configuramos HTTP para envío batch a tomi-metric-collector y forzar-guardado
   if (strlen(TOMI_METRICS_URL) > 0) {
@@ -163,9 +207,11 @@ void setup() {
 void loop() {
   serialController();
 
-  // Actualizar NTP si WiFi está habilitado
+  // Actualizar NTP, UDP Discovery y WebServer si WiFi está habilitado
   if (ENABLE_WIFI) {
     timeClient.update();
+    udpDiscovery.loop(yaiWifi.getIp(), WiFi.softAPIP().toString());
+    webServer.loop();
   }
 
   if (ENABLE_MQTT) { 

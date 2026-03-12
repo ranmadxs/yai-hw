@@ -24,8 +24,9 @@ extern unsigned long ultrasonicMeasurementInterval;
 // Función para obtener timestamp formateado
 extern String getCurrentTimestamp();
 
-// Forward declaration
+// Forward declarations
 class YaiHttpClient;
+class YaiUdpDiscovery;
 
 // Constantes para cálculos
 // Velocidad del sonido en el aire aprox 0.0343 cm/microsegundo
@@ -40,6 +41,7 @@ class YaiUltrasonicSensor {
     void setMqttClient(PubSubClient* client);
     void setMqttTopic(const char* topic);
     void setHttpClient(YaiHttpClient* client);
+    void setUdpDiscovery(YaiUdpDiscovery* udp);
 
     float getDistance();
     String getStatus();
@@ -58,8 +60,10 @@ class YaiUltrasonicSensor {
     const char* mqttTopic;
     bool mqttEnabled;
     YaiHttpClient* httpClient;
+    YaiUdpDiscovery* udpDiscovery;
 
     void readSensor();
+    void publishReading();
     void sendDataToMqtt();
     void calculateDistance(long duration);
 };

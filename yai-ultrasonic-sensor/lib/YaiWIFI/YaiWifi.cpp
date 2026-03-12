@@ -76,37 +76,147 @@ void YaiWIFI::loop() {
   }
 }
 
+#if defined(ESP32)
+void YaiWIFI::saveStoredWifi(const char* ssid, const char* password) {
+  Preferences prefs;
+  prefs.begin("wifi", false);
+  prefs.putString("ssid", ssid ? ssid : "");
+  prefs.putString("pass", password ? password : "");
+  prefs.end();
+  Serial.println("WiFi >> Guardado en memoria: " + String(ssid));
+}
+
+bool YaiWIFI::hasStoredWifi() {
+  Preferences prefs;
+  prefs.begin("wifi", true);
+  String s = prefs.getString("ssid", "");
+  prefs.end();
+  return s.length() > 0;
+}
+
+void YaiWIFI::clearStoredWifi() {
+  Preferences prefs;
+  prefs.begin("wifi", false);
+  prefs.clear();
+  prefs.end();
+  Serial.println("WiFi >> Credenciales borradas de memoria");
+}
+#else
+#define YAI_WIFI_EEPROM_MAGIC 0x55
+#define YAI_WIFI_EEPROM_OFFSET 0
+#define YAI_WIFI_EEPROM_SIZE 128
+
+void YaiWIFI::saveStoredWifi(const char* ssid, const char* password) {
+  EEPROM.begin(YAI_WIFI_EEPROM_SIZE);
+  EEPROM.write(YAI_WIFI_EEPROM_OFFSET, YAI_WIFI_EEPROM_MAGIC);
+  int slen = ssid ? min((int)strlen(ssid), YAI_WIFI_STORED_SSID_MAX) : 0;
+  int plen = password ? min((int)strlen(password), YAI_WIFI_STORED_PASS_MAX) : 0;
+  EEPROM.write(1, slen);
+  for (int i = 0; i < slen; i++) EEPROM.write(2 + i, ssid[i]);
+  EEPROM.write(34, plen);
+  for (int i = 0; i < plen; i++) EEPROM.write(35 + i, password[i]);
+  EEPROM.commit();
+  EEPROM.end();
+  Serial.println("WiFi >> Guardado en memoria: " + String(ssid));
+}
+
+bool YaiWIFI::hasStoredWifi() {
+  EEPROM.begin(YAI_WIFI_EEPROM_SIZE);
+  bool ok = (EEPROM.read(YAI_WIFI_EEPROM_OFFSET) == YAI_WIFI_EEPROM_MAGIC);
+  EEPROM.end();
+  return ok;
+}
+
+void YaiWIFI::clearStoredWifi() {
+  EEPROM.begin(YAI_WIFI_EEPROM_SIZE);
+  EEPROM.write(YAI_WIFI_EEPROM_OFFSET, 0);
+  EEPROM.commit();
+  EEPROM.end();
+  Serial.println("WiFi >> Credenciales borradas de memoria");
+}
+#endif
+
 void YaiWIFI::connect() {
-  char* ssid;
-  char* password;
-  //WiFi.mode(WIFI_STA);
+  char* ssid = nullptr;
+  char* password = nullptr;
   WiFi.setAutoConnect(true);
   WiFi.setAutoReconnect(true);
-  //BearSSL::WiFiClientSecure client;
-  //BearSSL::X509List cert(root_ca);
-  //this->espClient.setTrustAnchors(&cert);
-  //this->espClient.setTrustAnchors(&cert);
-  //BearSSL::X509List client_crt(client_cert);
-  //BearSSL::PrivateKey key(client_key);
-  //this->espClient.setClientRSACert(&client_crt, &key);
-  for (int j = 0; j < totalWifi; j++) {
-    Serial.print("Conectando a " + String(arrayWifi[j][0]) + " ");
-    ssid = arrayWifi[j][0];
-    password = arrayWifi[j][1];
 
-    WiFi.begin(ssid, password);
+  if (hasStoredWifi()) {
+    // Existe ssid en memoria: usar solo esas credenciales
+#if defined(ESP32)
+    Preferences prefs;
+    prefs.begin("wifi", true);
+    String s = prefs.getString("ssid", "");
+    String p = prefs.getString("pass", "");
+    prefs.end();
+    static char storedSsid[YAI_WIFI_STORED_SSID_MAX + 1];
+    static char storedPass[YAI_WIFI_STORED_PASS_MAX + 1];
+    s.toCharArray(storedSsid, sizeof(storedSsid));
+    p.toCharArray(storedPass, sizeof(storedPass));
+    ssid = storedSsid;
+    password = storedPass;
+#else
+    EEPROM.begin(YAI_WIFI_EEPROM_SIZE);
+    int slen = EEPROM.read(1);
+    int plen = EEPROM.read(34);
+    static char storedSsid[YAI_WIFI_STORED_SSID_MAX + 1];
+    static char storedPass[YAI_WIFI_STORED_PASS_MAX + 1];
+    for (int i = 0; i < slen && i < YAI_WIFI_STORED_SSID_MAX; i++) storedSsid[i] = EEPROM.read(2 + i);
+    storedSsid[slen] = '\0';
+    for (int i = 0; i < plen && i < YAI_WIFI_STORED_PASS_MAX; i++) storedPass[i] = EEPROM.read(35 + i);
+    storedPass[plen] = '\0';
+    EEPROM.end();
+    ssid = storedSsid;
+    password = storedPass;
+#endif
+    Serial.print("WiFi >> Usando credenciales de memoria: " + String(ssid) + " ");
+    if (password == nullptr || strlen(password) == 0) {
+      WiFi.begin(ssid);
+    } else {
+      WiFi.begin(ssid, password);
+    }
     for (int k = 0; k < retryWifi; k++) {
       if (WiFi.status() == WL_CONNECTED) {
-        k = retryWifi;
-        j = totalWifi;
         connectedWifi = true;
         Serial.print(" Connected!!!");
+        break;
+      }
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+  }
+
+  if (!connectedWifi) {
+    // No hay datos en memoria O falló la conexión con memoria: usar lista hardcodeada
+    if (!hasStoredWifi()) {
+      Serial.println("WiFi >> Sin credenciales en memoria, usando lista hardcodeada");
+    }
+    for (int j = 0; j < totalWifi; j++) {
+      Serial.print("Conectando a " + String(arrayWifi[j][0]) + " ");
+      ssid = arrayWifi[j][0];
+      password = arrayWifi[j][1];
+
+      if (password == nullptr || strlen(password) == 0) {
+        WiFi.begin(ssid);
       } else {
+        WiFi.begin(ssid, password);
+      }
+      for (int k = 0; k < retryWifi; k++) {
+        if (WiFi.status() == WL_CONNECTED) {
+          k = retryWifi;
+          j = totalWifi;
+          connectedWifi = true;
+          Serial.print(" Connected!!!");
+          break;
+        }
         delay(500);
         Serial.print(".");
       }
+      Serial.println("");
+      if (connectedWifi) break;
     }
-    Serial.println("");
   }
   String yaiIPLocal = WiFi.localIP().toString();
   if (!connectedWifi) {
@@ -121,10 +231,8 @@ void YaiWIFI::connect() {
   Serial.println(WiFi.macAddress());  
 }
 
-void YaiWIFI::startDNSServer(String dnsSsid) {
-  String wifiBaseName = WiFi.macAddress();
-  wifiBaseName.replace(":", "");
-  apSsid = dnsSsid + wifiBaseName;
+void YaiWIFI::startDNSServer(String ssid) {
+  apSsid = ssid;
   WiFi.softAPConfig(apLocalIp, apLocalIp, apSubnetMask);
   WiFi.softAP(apSsid);
   dnsServer.setTTL(300);

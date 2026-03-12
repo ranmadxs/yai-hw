@@ -7,16 +7,21 @@
   #include <ESP8266WiFi.h>
   #include <ESP8266mDNS.h>
   #include <DNSServer.h>
+  #include <EEPROM.h>
 #elif defined(ESP32)
   #include <WiFi.h>
   #include <ESPmDNS.h>
   #include <DNSServer.h>
+  #include <Preferences.h>
 #else
   #error "Plataforma no soportada. Solo ESP8266 y ESP32 son compatibles."
 #endif
 
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
+
+#define YAI_WIFI_STORED_SSID_MAX 32
+#define YAI_WIFI_STORED_PASS_MAX 64
 
 const int totalWifi = 5;
 const int retryWifi = 25;
@@ -42,6 +47,12 @@ class YaiWIFI {
     void connect();
     void startDNSServer(String dnsSsid);
     bool isConnected();
+    /** Guarda ssid/password en flash. Se usa en próximo boot si existe. */
+    void saveStoredWifi(const char* ssid, const char* password);
+    /** true si hay credenciales guardadas en memoria */
+    bool hasStoredWifi();
+    /** Borra las credenciales guardadas. Próximo boot usará lista hardcodeada. */
+    void clearStoredWifi();
     void loop();
     void scanNetworks();
     //WiFiClientSecure espClient;
