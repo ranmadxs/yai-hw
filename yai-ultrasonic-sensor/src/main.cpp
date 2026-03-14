@@ -13,7 +13,7 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.3-COSTA";
+const char* YAI_VERSION="0.3.4-HOTFIX-COSTA";
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -108,6 +108,7 @@ void setup() {
   
   // Inicializamos el sensor ultrasónico
   sensorUltrasonico.begin();
+  sensorUltrasonico.setChannelId(CHANNEL_ID);
   
   // Configuramos MQTT para el sensor si está habilitado
   if (ENABLE_MQTT) {

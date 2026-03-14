@@ -36,6 +36,7 @@ class YaiUltrasonicSensor {
     void loop();
     void setMqttClient(PubSubClient* client);
     void setMqttTopic(const char* topic);
+    void setChannelId(String id);
 
     float getDistance();
     String getStatus();
@@ -49,6 +50,7 @@ class YaiUltrasonicSensor {
 
     float currentDistance;
     String currentStatus;
+    String channelId;
 
     PubSubClient* clientMqtt;
     const char* mqttTopic;

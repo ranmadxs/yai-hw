@@ -3,6 +3,7 @@
 // External declarations
 extern const String DEVICE_ID;
 extern const String DEVICE_MQTT_TOPIC_OUT;
+extern const String CHANNEL_ID;
 extern bool ultrasonicLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 
@@ -15,6 +16,11 @@ YaiUltrasonicSensor::YaiUltrasonicSensor(int pinTrig, int pinEcho, unsigned long
   this->clientMqtt = nullptr;
   this->mqttTopic = nullptr;
   this->mqttEnabled = false;
+  this->channelId = "";
+}
+
+void YaiUltrasonicSensor::setChannelId(String id) {
+  channelId = id;
 }
 
 void YaiUltrasonicSensor::begin() {
@@ -134,6 +140,7 @@ void YaiUltrasonicSensor::sendDataToMqtt() {
 
     String mensaje = "{";
     mensaje += "\"deviceId\":\"" + DEVICE_ID + "\"";
+    mensaje += ",\"channelId\":\"" + channelId + "\"";
     mensaje += ",\"status\":\"" + currentStatus + "\"";
     mensaje += ",\"distanceCm\":" + String(distance, 2);
     mensaje += ",\"timestamp\":\"" + timestamp + "\"";
