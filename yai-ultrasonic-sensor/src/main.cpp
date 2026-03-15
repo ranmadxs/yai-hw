@@ -13,7 +13,7 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.5-HOTFIX-COSTA";
+const char* YAI_VERSION="0.3.7-HOTFIX-COSTA";
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
