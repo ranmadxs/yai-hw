@@ -34,6 +34,41 @@ pio device monitor -f log2file -f default
 pio device list
 ```
 
+## Tests
+
+Los tests se ejecutan en el dispositivo (ESP32 o NodeMCU) conectado por USB.
+
+### Ejecutar todos los tests
+
+```bash
+# En NodeMCU (ESP8266)
+pio test -e nodemcuv2_test
+
+# En ESP32
+pio test -e esp32_test
+```
+
+### Ejecutar tests específicos
+
+```bash
+# Tests unitarios MQTT (parsing, credenciales, formato JSON)
+pio test -e nodemcuv2_test -f test_mqtt
+
+# Test de integración MQTT (conexión real al broker)
+pio test -e nodemcuv2_test -f test_mqtt_integration
+
+# Tests WiFi
+pio test -e nodemcuv2_test -f test_wifi
+```
+
+### Tests disponibles
+
+| Test | Descripción |
+|------|-------------|
+| `test_mqtt` | Parsing de comandos, credenciales MQTT inmutables, formato JSON de mediciones |
+| `test_mqtt_integration` | Conexión real al broker (requiere WiFi) |
+| `test_wifi` | Instancia YaiWIFI, getMac, getIp, constantes |
+
 ## Comandos de Control
 
 El sensor ultrasónico puede ser controlado mediante comandos enviados por serial o MQTT:
