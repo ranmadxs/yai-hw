@@ -1,0 +1,15 @@
+#!/bin/bash
+# Consulta rápida a Ollama
+
+MODEL="${OLLAMA_DEFAULT_MODEL:-llama3.1:8b}"
+PROMPT="$*"
+
+if [ -z "$PROMPT" ]; then
+    echo "Uso: ask ejecuta el script monitor_tinaja.py"
+    exit 1
+fi
+
+curl -s http://localhost:11434/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{\"model\": \"$MODEL\", \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]}" \
+    | python3 -c "import sys,json; r=json.load(sys.stdin); print(r['choices'][0]['message']['content'])"

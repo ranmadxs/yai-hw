@@ -29,9 +29,7 @@ const char* MQTT_PASSWORD = "test";
 class YaiCommand;
 void commandFactoryExecute(YaiCommand yaiCommand);
 const bool ENABLE_WIFI = true;
-const bool ENABLE_HTTP_SRV = true;
 const bool ENABLE_MQTT = true && ENABLE_WIFI;
-const bool ENABLE_WEBSOCKETS = true && ENABLE_WIFI;
 const char* YAI_UID_NAME = "US01";
 
 #define EXECUTE_CMD     true
@@ -166,6 +164,7 @@ public:
 			getElementRoot(yaiCommand.message, root);
 			// yaiCommand.type = root[0];
 			yaiCommand.command = root[0];
+			yaiCommand.command.trim();  // Remove \r\n from serial input
 			yaiCommand.p1 = root[1];
 			yaiCommand.p2 = root[2];
 			yaiCommand.p3 = root[3];
@@ -215,6 +214,7 @@ YaiUtil yaiUtil;
 
 // Global variables for ultrasonic sensor control
 extern bool ultrasonicLogsEnabled;
+extern bool udpDiscoveryLogsEnabled;
 extern unsigned long ultrasonicMeasurementInterval;
 extern const String DEVICE_ID;
 extern const String DEVICE_MQTT_TOPIC_OUT;
@@ -239,6 +239,30 @@ void commandFactoryExecute(YaiCommand yaiCommand) {
 		if (ENABLE_MQTT && clientMqtt.connected()) {
 			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str()); // Canal general
 			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str()); // Canal específico del dispositivo
+		}
+	} else if (yaiCommand.command == "UDP_LOG_ON") {
+		udpDiscoveryLogsEnabled = true;
+		responseMessage = DEVICE_ID + ",UDP logs enabled";
+		Serial.println(responseMessage);
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str());
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str());
+		}
+	} else if (yaiCommand.command == "CLEAR_WIFI") {
+		yaiWifi.clearStoredWifi();
+		responseMessage = DEVICE_ID + ",WiFi guardado borrado. Reinicia para usar lista hardcodeada.";
+		Serial.println(responseMessage);
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str());
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str());
+		}
+	} else if (yaiCommand.command == "UDP_LOG_OFF") {
+		udpDiscoveryLogsEnabled = false;
+		responseMessage = DEVICE_ID + ",UDP logs disabled";
+		Serial.println(responseMessage);
+		if (ENABLE_MQTT && clientMqtt.connected()) {
+			clientMqtt.publish(MQTT_TOPIC_OUT, responseMessage.c_str());
+			clientMqtt.publish(DEVICE_MQTT_TOPIC_OUT.c_str(), responseMessage.c_str());
 		}
 	} else if (yaiCommand.command == "OFF") {
 		ultrasonicLogsEnabled = false;

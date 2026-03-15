@@ -4,6 +4,9 @@
 #include <PubSubClient.h>
 #include "YaiMqtt.h"
 #include "YaiUltrasonicSensor.h"
+#include "YaiHttpClient.h"
+#include "YaiUdpDiscovery.h"
+#include "YaiWebServer.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
@@ -13,7 +16,14 @@
 #include <ESP.h>
 #endif
 
-const char* YAI_VERSION="0.3.7-HOTFIX-COSTA";
+#ifndef YAI_VERSION
+#define YAI_VERSION "0.3.9-COSTA"
+#endif
+
+#ifndef DEVICE_DESCRIPTION
+#define DEVICE_DESCRIPTION ""
+#endif
+const char* DEVICE_DESCRIPTION_STR = DEVICE_DESCRIPTION;
 
 // Genera un ID corto basado en el chip (8 hex) para usar en los canales MQTT
 String getChipShortId() {
@@ -34,8 +44,18 @@ String getChipShortId() {
 // Profundidad del tanque en cm (por ejemplo 1.60 m = 160 cm)
 extern const float TANK_DEPTH_CM = 160.0;
 
+// Offset del sensor en cm: el sensor está montado X cm por encima del nivel de referencia.
+// Se resta a la medida para obtener la distancia corregida al agua.
+extern const float SENSOR_HEIGHT_OFFSET_CM = 15.0;
+
+// Capacidad del tanque en litros cuando está lleno
+extern const float TANK_CAPACITY_LITERS = 5000.0;
+
+// URL pública de tomi-metric-collector (ej: "https://mi-servidor.com" o "" para deshabilitar)
+const char* TOMI_METRICS_URL = "https://tomi-metric-collector-production.up.railway.app/";
+
 // Identificador de canal MQTT basado en el chip (ej: 1A2B3C4D), longitud máx. 8
-const String CHANNEL_ID = getChipShortId();
+extern const String CHANNEL_ID = getChipShortId();
 
 // Device ID estático para el sensor (incluye versión, se usa en mensajes)
 const String DEVICE_ID = "YUS-" + String(YAI_VERSION);
@@ -45,7 +65,11 @@ const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + CHANNEL_ID + "/out";
 const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + CHANNEL_ID + "/in";
 
 // Variables globales para controlar logs del sensor
-bool ultrasonicLogsEnabled = true;  // Logs habilitados por defecto
+bool ultrasonicLogsEnabled = false;  // Logs del sensor ocultos por defecto (ON para activar)
+#ifndef UDP_DISCOVERY_LOGS_ENABLED
+#define UDP_DISCOVERY_LOGS_ENABLED 0
+#endif
+bool udpDiscoveryLogsEnabled = (UDP_DISCOVERY_LOGS_ENABLED != 0);  // Definido en platformio.ini build_flags
 unsigned long ultrasonicMeasurementInterval = 1500; // Intervalo por defecto (1.5 segundos)
 
 // Definición de pines del sensor ultrasónico
@@ -54,6 +78,15 @@ const int PIN_ECHO = 18; // Recibir respuesta
 
 // Instancia del sensor ultrasónico
 YaiUltrasonicSensor sensorUltrasonico(PIN_TRIG, PIN_ECHO, ultrasonicMeasurementInterval);
+
+// Cliente HTTP para envío batch a tomi-metric-collector (cada 1 min)
+YaiHttpClient httpClient;
+
+// UDP Discovery para app Android (puerto 9999, responde AIA-DISCOVER con JSON)
+YaiUdpDiscovery udpDiscovery;
+
+// WebServer HTTP (puerto 80): GET/POST /api/wifi para scan y configurar WiFi
+YaiWebServer webServer;
 
 // Cliente NTP para obtener la hora actual
 WiFiUDP ntpUDP;
@@ -82,7 +115,7 @@ void setup() {
   Serial.begin(115200); // opens serial port, sets data rate to 115200 bps
   existCMD = false;
   Serial.println(" ####################################");
-  String yaiServerVersion = " ## yai-ultrasonic-sensor " + DEVICE_ID + " ##";
+  String yaiServerVersion = " ## yai-ultrasonic-sensor: " + CHANNEL_ID + " @ " + DEVICE_ID + " ##";
 	Serial.println(yaiServerVersion);
 	Serial.println(" ####################################");  
   if (ENABLE_WIFI) { 
@@ -90,10 +123,35 @@ void setup() {
     yaiWifi.connect();
   }
   if (ENABLE_WIFI) {
-    Serial.println(" ######### DNS Server ###########");
-    String dnsName = "YAI_SRV_ULTRASONIC";
-    Serial.println(dnsName);
-    yaiWifi.startDNSServer(dnsName);
+    Serial.println(" ######### DNS Server (AP) ###########");
+    String apSsid = CHANNEL_ID + "_" + DEVICE_ID;
+    Serial.println("AP SSID: " + apSsid);
+    yaiWifi.startDNSServer(apSsid);
+
+    // UDP Discovery (app Android: discovery + lecturas por yai-mqtt/<CHANNEL>/out, comandos por yai-mqtt/<CHANNEL>/in)
+    udpDiscovery.begin(
+      DEVICE_ID.c_str(),
+      CHANNEL_ID.c_str(),
+      YAI_VERSION,
+      DEVICE_MQTT_TOPIC_IN.c_str(),
+      DEVICE_MQTT_TOPIC_OUT.c_str(),
+      (DEVICE_DESCRIPTION_STR[0] != '\0') ? DEVICE_DESCRIPTION_STR : nullptr,
+      "estanque"
+    );
+    udpDiscovery.setOnCommandCallback([](const char* payload) {
+      YaiCommand cmd;
+      cmd.message = payload;
+      cmd.type = String(YAI_COMMAND_TYPE_SERIAL);
+      cmd.execute = true;
+      cmd.print = true;
+      yaiUtil.string2YaiCommand(cmd);
+      commandFactoryExecute(cmd);
+    });
+
+    // WebServer para /api/wifi (GET: scan + conectado, POST: ssid+pass para conectar)
+    webServer.setWifiRestoreCallback([]() { yaiWifi.connect(); });
+    webServer.setWifiSaveCallback([](const char* s, const char* p) { yaiWifi.saveStoredWifi(s, p); });
+    webServer.begin();
 
     // Inicializar NTP Client
     Serial.println(" ######### NTP Client ###########");
@@ -108,7 +166,17 @@ void setup() {
   
   // Inicializamos el sensor ultrasónico
   sensorUltrasonico.begin();
-  sensorUltrasonico.setChannelId(CHANNEL_ID);
+
+  sensorUltrasonico.setUdpDiscovery(&udpDiscovery);
+
+  // Configuramos HTTP para envío batch a tomi-metric-collector y forzar-guardado
+  if (strlen(TOMI_METRICS_URL) > 0) {
+    httpClient.setBaseUrl(TOMI_METRICS_URL);
+    httpClient.setAiaOrigin((DEVICE_ID + "@" + CHANNEL_ID).c_str());
+    sensorUltrasonico.setHttpClient(&httpClient);
+    Serial.println("HTTP >> Tomi Metrics URL: " + String(TOMI_METRICS_URL));
+    Serial.println("HTTP >> X-Aia-Origin: " + DEVICE_ID + "@" + CHANNEL_ID);
+  }
   
   // Configuramos MQTT para el sensor si está habilitado
   if (ENABLE_MQTT) {
@@ -139,9 +207,11 @@ void setup() {
 void loop() {
   serialController();
 
-  // Actualizar NTP si WiFi está habilitado
+  // Actualizar NTP, UDP Discovery y WebServer si WiFi está habilitado
   if (ENABLE_WIFI) {
     timeClient.update();
+    udpDiscovery.loop(yaiWifi.getIp(), WiFi.softAPIP().toString());
+    webServer.loop();
   }
 
   if (ENABLE_MQTT) { 
@@ -150,6 +220,9 @@ void loop() {
     }
     clientMqtt.loop();
   }
+
+  // Loop del cliente HTTP (envía batch cada 1 min si hay lecturas)
+  httpClient.loop();
   
   // Loop del sensor ultrasónico (maneja lectura y envío MQTT)
   sensorUltrasonico.loop();
