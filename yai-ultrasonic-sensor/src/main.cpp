@@ -173,6 +173,7 @@ void setup() {
   if (strlen(TOMI_METRICS_URL) > 0) {
     httpClient.setBaseUrl(TOMI_METRICS_URL);
     httpClient.setAiaOrigin((DEVICE_ID + "@" + CHANNEL_ID).c_str());
+    httpClient.setForzarGuardadoOrigin(CHANNEL_ID.c_str());  // forzar-guardado usa CHANNEL_ID en X-Aia-Origin
     sensorUltrasonico.setHttpClient(&httpClient);
     Serial.println("HTTP >> Tomi Metrics URL: " + String(TOMI_METRICS_URL));
     Serial.println("HTTP >> X-Aia-Origin: " + DEVICE_ID + "@" + CHANNEL_ID);

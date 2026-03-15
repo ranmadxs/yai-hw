@@ -10,9 +10,10 @@
 #include "YaiMqtt.h"
 
 bool ultrasonicLogsEnabled = false;
+bool udpDiscoveryLogsEnabled = false;
 unsigned long ultrasonicMeasurementInterval = 1500;
 const String DEVICE_ID = "TEST";
-const String CHANNEL_ID = "TEST1234";
+extern const String CHANNEL_ID = "TEST1234";
 const String DEVICE_MQTT_TOPIC_OUT = "yai-mqtt/" + CHANNEL_ID + "/out";
 const String DEVICE_MQTT_TOPIC_IN = "yai-mqtt/" + CHANNEL_ID + "/in";
 

@@ -27,8 +27,11 @@ public:
   /** Configura la URL base (ej: "https://tomicolector.cl") */
   void setBaseUrl(const char* url);
 
-  /** Configura el identificador para header X-Aia-Origin (ej: "YUS_028costa" o "YUS-1.0.5@1A2B3C4D") */
+  /** Configura el identificador para header X-Aia-Origin en batch de lecturas (ej: "YUS-1.0.5@1A2B3C4D") */
   void setAiaOrigin(const char* origin);
+
+  /** Configura el origin para forzar-guardado. Por defecto usa el mismo que setAiaOrigin. Usar CHANNEL_ID para identificar el dispositivo. */
+  void setForzarGuardadoOrigin(const char* origin);
 
   /** Agrega una lectura JSON al buffer. Se envía en el próximo batch. */
   void addReading(const String& json);
@@ -57,6 +60,7 @@ private:
 
   char _baseUrl[256];
   char _aiaOrigin[64];
+  char _forzarGuardadoOrigin[64];
   String _buffer[YAI_HTTP_BUFFER_SIZE];
   int _bufferCount;
   unsigned long _lastSendTime;

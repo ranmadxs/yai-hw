@@ -217,6 +217,10 @@ MQTT >> <DEVICE_ID>,OKO,25.50,2024-01-15 14:30:25
 - **Puerto**: `1883`
 - **Usuario/Contraseña**: `test/test`
 
+**Importante:** El broker es público. Si te suscribes a `yai-mqtt/#` verás datos de **todos** los dispositivos. Para ver **solo tu sensor**, usa el topic con tu `CHANNEL_ID` (ej: `yai-mqtt/01C40A24/out`). El `CHANNEL_ID` aparece en Serial al iniciar el dispositivo.
+
+**Prefijo común para mosquitto:** `-h broker.mqttdashboard.com -p 1883 -u test -P test`
+
 ## Formato de Mensajes MQTT
 
 ### Mensajes salientes (sensor → MQTT OUT):
@@ -280,30 +284,31 @@ ON,2000,0,0,0,0,0,0
 
 1. **Activar logs cada 2 segundos** (enviar al canal específico del dispositivo):
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
    ```
 
 2. **Desactivar logs** (canal específico):
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
    ```
 
-3. **Suscribirse a los datos del sensor** (canal específico donde se publican las lecturas JSON):
+3. **Suscribirse a los datos de TU sensor** (reemplaza `<CHANNEL_ID>` por el tuyo, ej: `01C40A24`):
    ```bash
-   mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/out"
+   mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/out" -v
    ```
+   Para ver tu CHANNEL_ID: abre el monitor serial (`pio device monitor`) al iniciar el dispositivo.
 
 4. **PING o HELP** (canal general):
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
-   mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "PING"
+   mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/out"
    ```
 
 ### Ejemplo de conversación MQTT:
 
 1. **Enviar comando para activar logs (canal específico):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
    ```
 
 2. **Recibir respuesta (en ambos canales):**
@@ -320,8 +325,8 @@ ON,2000,0,0,0,0,0,0
 
 4. **Enviar comando para verificar conectividad o ayuda (canal general):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "HELP"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "PING"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "HELP"
    ```
 
 5. **Recibir respuesta PONG o HELP (canal general `yai-mqtt/out`):**
@@ -331,7 +336,7 @@ ON,2000,0,0,0,0,0,0
 
 6. **Enviar comando para desactivar logs (canal específico):**
    ```bash
-   mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+   mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
    ```
 
 7. **Recibir respuesta de confirmación (en ambos canales):**
@@ -344,18 +349,18 @@ ON,2000,0,0,0,0,0,0
 
 **Enviar comando ON (solo funciona en canal específico):**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
+mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "ON,2000,0,0,0,0,0,0"
 ```
 
 **Enviar comando OFF (solo funciona en canal específico):**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
+mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/in" -m "OFF,0,0,0,0,0,0,0"
 ```
 
 **Enviar PING o HELP (solo en canal general):**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "PING"
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "HELP"
+mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "PING"
+mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "HELP"
 ```
 
 **Nota:** Los comandos ON/OFF serán ignorados si se envían al canal general (`yai-mqtt/in`).
@@ -363,19 +368,25 @@ Los comandos PING y HELP serán ignorados si se envían al canal específico (`y
 
 ### Suscripción a canales específicos:
 
+**Conectarse a mosquitto y ver solo los datos de TU sensor** (reemplaza `01C40A24`, `001341DA` por tu CHANNEL_ID):
+```bash
+mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/01C40A24/out" -v
+```
+Comando completo listo para copiar. El CHANNEL_ID aparece en Serial al iniciar el dispositivo (`pio device monitor`).
+
 **Suscribirse solo al canal general:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
+mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/out"
 ```
 
 **Suscribirse solo al canal específico del dispositivo:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/out"
+mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/out"
 ```
 
 **Suscribirse a todos los canales del dispositivo:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/#"
+mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/<CHANNEL_ID>/#"
 ```
 
 ## Herramientas de Prueba MQTT
@@ -388,12 +399,12 @@ mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/<CHANNEL_ID>/#"
 
 **Publicar mensaje:**
 ```bash
-mosquitto_pub -h broker.mqttdashboard.com -t "yai-mqtt/in" -m "ON,1500,0,0,0,0,0,0"
+mosquitto_pub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/in" -m "ON,1500,0,0,0,0,0,0"
 ```
 
 **Suscribirse a tópico:**
 ```bash
-mosquitto_sub -h broker.mqttdashboard.com -t "yai-mqtt/out"
+mosquitto_sub -h broker.mqttdashboard.com -p 1883 -u test -P test -t "yai-mqtt/out"
 ```
 
 ### Configuración del Sensor

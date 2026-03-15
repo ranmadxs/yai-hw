@@ -127,6 +127,7 @@ static void forzarGuardadoTask(void* param) {
 YaiHttpClient::YaiHttpClient() {
   _baseUrl[0] = '\0';
   _aiaOrigin[0] = '\0';
+  _forzarGuardadoOrigin[0] = '\0';
   _bufferCount = 0;
   _lastSendTime = millis();
   _lastForzarGuardadoTime = millis();
@@ -152,6 +153,15 @@ void YaiHttpClient::setAiaOrigin(const char* origin) {
     _aiaOrigin[sizeof(_aiaOrigin) - 1] = '\0';
   } else {
     _aiaOrigin[0] = '\0';
+  }
+}
+
+void YaiHttpClient::setForzarGuardadoOrigin(const char* origin) {
+  if (origin && strlen(origin) < sizeof(_forzarGuardadoOrigin)) {
+    strncpy(_forzarGuardadoOrigin, origin, sizeof(_forzarGuardadoOrigin) - 1);
+    _forzarGuardadoOrigin[sizeof(_forzarGuardadoOrigin) - 1] = '\0';
+  } else {
+    _forzarGuardadoOrigin[0] = '\0';
   }
 }
 
@@ -182,7 +192,8 @@ void YaiHttpClient::loop() {
   unsigned long now = millis();
 
   // Forzar guardado periódico. En ESP32 corre en task para no bloquear sensor/WebServer.
-  if (_forzarGuardadoIntervalMs > 0 && _aiaOrigin[0] != '\0' &&
+  const char* fgOrigin = (_forzarGuardadoOrigin[0] != '\0') ? _forzarGuardadoOrigin : _aiaOrigin;
+  if (_forzarGuardadoIntervalMs > 0 && fgOrigin[0] != '\0' &&
       now - _lastForzarGuardadoTime >= _forzarGuardadoIntervalMs) {
     _lastForzarGuardadoTime = now;
 #if defined(ESP32)
@@ -194,7 +205,7 @@ void YaiHttpClient::loop() {
       url += "/monitor/api/historial/forzar-guardado";
       strncpy(td->url, url.c_str(), sizeof(td->url) - 1);
       td->url[sizeof(td->url) - 1] = '\0';
-      strncpy(td->aiaOrigin, _aiaOrigin, sizeof(td->aiaOrigin) - 1);
+      strncpy(td->aiaOrigin, fgOrigin, sizeof(td->aiaOrigin) - 1);
       td->inProgressFlag = &_forzarGuardadoInProgress;
       xTaskCreate(forzarGuardadoTask, "forzar_guardado", 12288, td, 1, NULL);
     }
@@ -210,7 +221,8 @@ void YaiHttpClient::loop() {
 }
 
 bool YaiHttpClient::forzarGuardado() {
-  if (!isEnabled() || _aiaOrigin[0] == '\0') return false;
+  const char* fgOrigin = (_forzarGuardadoOrigin[0] != '\0') ? _forzarGuardadoOrigin : _aiaOrigin;
+  if (!isEnabled() || fgOrigin[0] == '\0') return false;
 
   String url = String(_baseUrl);
   if (url.endsWith("/")) url.remove(url.length() - 1);
@@ -233,7 +245,7 @@ bool YaiHttpClient::forzarGuardado() {
     http.setTimeout(TIMEOUT_MS);
     http.setConnectTimeout(300000);  // 5 min para cold start (Railway)
 #endif
-    http.addHeader("X-Aia-Origin", _aiaOrigin);
+    http.addHeader("X-Aia-Origin", fgOrigin);
     int code = http.POST("");
 
     bool guardado = false;
